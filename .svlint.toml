@@ -1,0 +1,27 @@
+[option]
+exclude_paths = []
+
+[rules]
+blocking_assignment_in_always_ff = true
+case_default = true
+default_nettype_none = true
+enum_with_type = true
+explicit_case_default = true
+multiline_for_begin = true
+multiline_if_begin = true
+interface_port_with_modport = true
+legacy_always = false
+level_sensitive_always = false
+localparam_explicit_type = false
+localparam_type_twostate = false
+loop_variable_declaration = false
+non_ansi_module = false
+non_blocking_assignment_in_always_comb = true
+parameter_explicit_type = false
+parameter_in_package = false
+parameter_type_twostate = false
+sequential_block_in_always_comb = false
+sequential_block_in_always_ff = false
+sequential_block_in_always_latch = false
+input_with_var = false
+

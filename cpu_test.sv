@@ -9,7 +9,10 @@ module cpu_test();
 
     initial begin
         $dumpfile("cpu.vcd");
-        $dumpvars(0, cpu, cpu.reg_file.regfile);
+        $dumpvars(0, cpu);
+        for (int i = 0; i < 32; i++) begin
+          $dumpvars(0, cpu.reg_file.regfile[i]);
+        end
         clk = 0;
 
         rst = 1;

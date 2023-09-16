@@ -1,5 +1,9 @@
-cpu: cpu.sv cpu_test.sv
-	iverilog -o cpu -g 2012 cpu.sv cpu_test.sv
+MODULES = alu.sv cpu.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv
+
+all: cpu
+
+cpu: $(MODULES)
+	iverilog -o cpu -g 2012 $(MODULES)
 
 run: cpu
 	vvp cpu
@@ -7,4 +11,4 @@ run: cpu
 clean:
 	rm -rf cpu cpu.vcd
 
-.PHONY: run clean
+.PHONY: all run clean

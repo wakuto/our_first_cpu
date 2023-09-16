@@ -73,7 +73,11 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
-    read_data = dmemory[address];
+    if (address == 32'h0) begin
+        read_data = 32'hdeadbeef;
+    end else begin
+        read_data = dmemory[address];
+    end
 end
 
 endmodule
@@ -132,6 +136,7 @@ module CPU(
     end
 
     logic   [31: 0] rd1, rd2;
+    logic   [31: 0] write_data;
 
     // for I-format
     Regfile reg_file(
@@ -140,6 +145,8 @@ module CPU(
         
         .addr1(instr[19: 15]),
         .rd1(rd1),
+        .addr2(instr[24: 20]),
+        .rd2(write_data),
         
         .addr3(instr[11: 7]),
         .wd3(memory_read_data)
@@ -154,15 +161,21 @@ module CPU(
         関数名 = 入力1 + 入力2;
     endfunction
     */
-    function [31: 0] extend(input [11:0] imm);
-        extend = 32'(signed'(imm[11:0]));
+    function [31: 0] extend(input imm_src, input [31:0] instr);
+        case(imm_src)
+            // I-Type
+            1'b0: extend = 32'(signed'(instr[31 -: 12]));
+            // S-Type
+            1'b1: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
+            default: extend = 32'hdeadbeef;
+        endcase
     endfunction
 
     logic   [31:0] alu_result;
     ALU alu(
         .alu_control(alu_control),
         .srca(rd1),
-        .srcb(extend(instr[31:20])),
+        .srcb(extend(instr)),
         .alu_result(alu_result)
     );
 
@@ -172,6 +185,7 @@ module CPU(
         .clk(clk),
         .address(alu_result),
         .read_data(memory_read_data),
-        .write_enable(1'b0)
+        .write_enable(1'b0),
+        .write_data(write_data)
     );
 endmodule

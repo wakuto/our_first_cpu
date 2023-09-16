@@ -87,10 +87,12 @@ module ALU (
     input  wire [31:0]   srca,
     input  wire [31:0]   srcb,
 
-    output logic [31:0]   alu_result
+    output logic [31:0]   alu_result,
+    output logic          zero
 );
 
 always_comb begin
+    zero = alu_result == 0;
     case (alu_control)
         3'b000 : alu_result = srca + srcb;
         3'b001 : alu_result = srca - srcb;
@@ -117,11 +119,13 @@ module CPU(
     
     // control signal
     logic   [2:0]   alu_control;
-    logic           imm_src;
+    logic   [1:0]   imm_src;
     logic           reg_write;
     logic           mem_write;
     logic           alu_src;
     logic           result_src;
+    logic           pc_src;
+    logic           zero;
 
     IMemory instruction_memory(
         .pc(pc),
@@ -132,7 +136,10 @@ module CPU(
         alu_control = 3'b000;
     end
 
-    wire [31: 0] pc_next = pc + 4;
+    logic [31:0] pc_next;
+
+    assign pc_next = pc + 4;
+
     always_ff @(posedge clk) begin
         if (rst) begin
             pc <= 0;
@@ -170,15 +177,21 @@ module CPU(
         関数名 = 入力1 + 入力2;
     endfunction
     */
-    function [31: 0] extend(input imm_src, input [31:0] instr);
+    function [31: 0] extend(input [1:0] imm_src, input [31:0] instr);
         case(imm_src)
             // I-Type
-            1'b0: extend = 32'(signed'(instr[31 -: 12]));
+            2'b00: extend = 32'(signed'(instr[31 -: 12]));
             // S-Type
-            1'b1: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
+            2'b01: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
+            // B-Type
+            2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[12:9]}));
             default: extend = 32'hdeadbeef;
         endcase
     endfunction
+
+    logic   [31: 0] pc_target;
+    
+    assign pc_target = pc + extend(imm_src, instr);
 
     logic   [31:0] alu_result;
     logic   [31:0] srcb;
@@ -188,7 +201,8 @@ module CPU(
         .alu_control(alu_control),
         .srca(rd1),
         .srcb(srcb),
-        .alu_result(alu_result)
+        .alu_result(alu_result),
+        .zero(zero)
     );
 
     logic   [31: 0] read_data;

@@ -114,7 +114,14 @@ module CPU(
 );
     logic   [31: 0] pc;
     logic   [31: 0] instr;
+    
+    // control signal
     logic   [2:0]   alu_control;
+    logic           imm_src;
+    logic           reg_write;
+    logic           mem_write;
+    logic           alu_src;
+    logic           result_src;
 
     IMemory instruction_memory(
         .pc(pc),
@@ -146,11 +153,13 @@ module CPU(
         .addr1(instr[19: 15]),
         .rd1(rd1),
         .addr2(instr[24: 20]),
-        .rd2(write_data),
+        .rd2(rd2),
         
         .addr3(instr[11: 7]),
-        .wd3(memory_read_data)
+        .wd3(result),
+        .we3(reg_write)
     );
+    assign write_data = rd2;
 
     //logic   data_address = rd1 + instr[11: 0];
     /*
@@ -172,20 +181,24 @@ module CPU(
     endfunction
 
     logic   [31:0] alu_result;
+    logic   [31:0] srcb;
+
+    assign srcb = alu_src ? extend(imm_src, instr) : rd2;
     ALU alu(
         .alu_control(alu_control),
         .srca(rd1),
-        .srcb(extend(instr)),
+        .srcb(srcb),
         .alu_result(alu_result)
     );
 
-    logic   [31: 0] memory_read_data;
-
+    logic   [31: 0] read_data;
+    logic   [31: 0] result;
+    assign result = result_src ? read_data : alu_result;
     DMemory data_memory(
         .clk(clk),
         .address(alu_result),
-        .read_data(memory_read_data),
-        .write_enable(1'b0),
+        .read_data(read_data),
+        .write_enable(mem_write),
         .write_data(write_data)
     );
 endmodule

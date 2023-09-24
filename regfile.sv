@@ -1,3 +1,5 @@
+`default_nettype none
+
 module Regfile(
     input   wire          clk,
     input   wire          rst,
@@ -37,3 +39,4 @@ always_comb begin
 end
 
 endmodule
+`default_nettype wire

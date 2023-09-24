@@ -1,3 +1,5 @@
+`default_nettype none
+
 module ALU (
     input  wire  [2:0]   alu_control,
     input  wire [31:0]   srca,
@@ -8,7 +10,6 @@ module ALU (
 );
 
 always_comb begin
-    zero = alu_result == 0;
     case (alu_control)
         3'b000 : alu_result = srca + srcb;
         3'b001 : alu_result = srca - srcb;
@@ -20,6 +21,8 @@ always_comb begin
             $display("Unknown ALU command.");
         end
     endcase
+    zero = alu_result == 0;
 end
 
 endmodule
+`default_nettype wire

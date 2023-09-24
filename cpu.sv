@@ -1,10 +1,12 @@
+`default_nettype none
+
 module CPU(
     input   wire    clk,
     input   wire    rst
 );
     logic   [31: 0] pc;
     logic   [31: 0] instr;
-    
+
     // control signal
     logic   [2:0]   alu_control;
     logic   [1:0]   imm_src;
@@ -19,14 +21,13 @@ module CPU(
         .pc(pc),
         .instr(instr)
     );
-    
-    always_comb begin
-        alu_control = 3'b000;
-    end
 
     logic [31:0] pc_next;
+    logic [31:0] pc_plus_4;
+    logic [31:0] pc_target;
 
-    assign pc_next = pc + 4;
+    assign pc_plus_4 = pc + 4;
+    assign pc_next = pc_src ? pc_target : pc_plus_4;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -37,6 +38,29 @@ module CPU(
         end
     end
 
+    logic   [6:0] op;
+    logic   [6:0] funct7;
+    logic   [2:0] funct3;
+
+    assign op     = instr[6:0];
+    assign funct7 = instr[31:25];
+    assign funct3 = instr[14:12];
+
+    Decoder decoder(
+        .zero(zero),
+        .op(op),
+        .funct3(funct3),
+        .funct7(funct7),
+
+        .pc_src(pc_src),
+        .result_src(result_src),
+        .mem_write(mem_write),
+        .alu_control(alu_control),
+        .alu_src(alu_src),
+        .imm_src(imm_src),
+        .reg_write(reg_write)
+    );
+
     logic   [31: 0] rd1, rd2;
     logic   [31: 0] write_data;
 
@@ -44,12 +68,12 @@ module CPU(
     Regfile reg_file(
         .clk(clk),
         .rst(rst),
-        
+
         .addr1(instr[19: 15]),
         .rd1(rd1),
         .addr2(instr[24: 20]),
         .rd2(rd2),
-        
+
         .addr3(instr[11: 7]),
         .wd3(result),
         .we3(reg_write)
@@ -72,19 +96,20 @@ module CPU(
             // S-Type
             2'b01: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
             // B-Type
-            2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[12:9]}));
+            2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
             default: extend = 32'hdeadbeef;
         endcase
     endfunction
 
-    logic   [31: 0] pc_target;
-    
-    assign pc_target = pc + extend(imm_src, instr);
+    logic   [31:0]  imm_ext;
+    assign imm_ext = extend(imm_src, instr);
+
+    assign pc_target = pc + imm_ext;
 
     logic   [31:0] alu_result;
     logic   [31:0] srcb;
 
-    assign srcb = alu_src ? extend(imm_src, instr) : rd2;
+    assign srcb = alu_src ? imm_ext : rd2;
     ALU alu(
         .alu_control(alu_control),
         .srca(rd1),
@@ -104,3 +129,4 @@ module CPU(
         .write_data(write_data)
     );
 endmodule
+`default_nettype wire

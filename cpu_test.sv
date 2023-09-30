@@ -19,7 +19,7 @@ module cpu_test();
         @(posedge clk)
         @(posedge clk)
         rst = 0;
-        #1000
+        #100000
         $finish;
     end
     always #(5) begin

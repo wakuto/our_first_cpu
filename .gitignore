@@ -1,2 +1,7 @@
 cpu
 *.vcd
+
+# Binary files
+*.elf
+*.bin
+*.o

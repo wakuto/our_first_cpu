@@ -13,8 +13,8 @@ module CPU(
     logic           reg_write;
     logic           mem_write;
     logic           alu_src;
-    logic           result_src;
-    logic           pc_src;
+    logic   [1:0]   result_src;
+    logic   [1:0]   pc_src;
     logic           zero;
 
     IMemory instruction_memory(
@@ -27,7 +27,15 @@ module CPU(
     logic [31:0] pc_target;
 
     assign pc_plus_4 = pc + 4;
-    assign pc_next = pc_src ? pc_target : pc_plus_4;
+    always_comb begin
+        case(pc_src)
+            2'b00:   pc_next   = pc_plus_4;
+            2'b01:   pc_next   = pc_target;
+            2'b10:   pc_next   = alu_result;
+            default: pc_next = 32'hdeadbeef;
+        endcase
+    end
+    //assign pc_next = pc_src ? pc_target : pc_plus_4;
 
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -97,6 +105,8 @@ module CPU(
             2'b01: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
             // B-Type
             2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
+            // J-Type
+            2'b11: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
             default: extend = 32'hdeadbeef;
         endcase
     endfunction
@@ -120,7 +130,15 @@ module CPU(
 
     logic   [31: 0] read_data;
     logic   [31: 0] result;
-    assign result = result_src ? read_data : alu_result;
+    // assign result = result_src ? read_data : alu_result;
+    always_comb begin
+        case(result_src)
+            2'b00 : result = alu_result;
+            2'b01 : result = read_data;
+            2'b10 : result = pc_plus_4;
+            default : result = 32'hdeadbeef;
+        endcase
+    end
     DMemory data_memory(
         .clk(clk),
         .address(alu_result),

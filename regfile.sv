@@ -24,7 +24,7 @@ always_ff @(posedge clk) begin
             regfile[i] <= 32'h0;
         end
     end else begin
-        if (we3) begin
+        if (we3 && addr3 != 0) begin
             regfile[addr3] <= wd3;
         end
     end

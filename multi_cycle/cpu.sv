@@ -5,44 +5,69 @@ module CPU(
     input   wire    rst
 );
     logic   [31: 0] pc;
-    logic   [31: 0] instr;
+
+    // non architectural register
+    logic  [31: 0]  instr;
+    logic  [31: 0]  old_pc;
+    logic  [31: 0]  data;
 
     // control signal
     logic   [2:0]   alu_control;
     logic   [1:0]   imm_src;
     logic           reg_write;
     logic           mem_write;
-    logic           alu_src;
     logic   [1:0]   result_src;
     logic   [1:0]   pc_src;
     logic           zero;
+    
+    // fsm signal
+    logic           ir_write;
+    logic           adr_src;
+    logic           pc_write;
+    logic           alu_src_a;
+    logic           alu_src_b;
+    
+    logic  [31:0]  read_data;
+    logic  [31:0]  adr;
+    
+    
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            instr <= 32'h0;
+            old_pc <= 0;
+        end else begin
+            if (ir_write) begin
+                instr <= read_data;
+                old_pc <= pc;
+            end
+            data <= read_data;
+        end
+    end
+    
+    assign adr = adr_src ? alu_out : pc;
 
-    IMemory instruction_memory(
-        .pc(pc),
-        .instr(instr)
+    Memory memory(
+        .clk(clk),
+        .address(pc),
+        .read_data(read_data),
+        .write_enable(mem_write),
+        .write_data(write_data)
     );
 
     logic [31:0] pc_next;
     logic [31:0] pc_plus_4;
     logic [31:0] pc_target;
 
-    assign pc_plus_4 = pc + 4;
-    always_comb begin
-        case(pc_src)
-            2'b00:   pc_next   = pc_plus_4;
-            2'b01:   pc_next   = pc_target;
-            2'b10:   pc_next   = alu_result;
-            default: pc_next = 32'hdeadbeef;
-        endcase
-    end
-    //assign pc_next = pc_src ? pc_target : pc_plus_4;
+    assign pc_next = result;
 
     always_ff @(posedge clk) begin
         if (rst) begin
             pc <= 0;
         end
         else begin
-            pc <= pc_next;
+            if (pc_write) begin
+                pc <= pc_next;
+            end
         end
     end
 
@@ -71,6 +96,18 @@ module CPU(
 
     logic   [31: 0] rd1, rd2;
     logic   [31: 0] write_data;
+    // non architectural register
+    logic   [31: 0] a;
+    
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            a <= 0;
+            write_data <= 0;
+        end else begin
+            a <= rd1;
+            write_data <= rd2;
+        end
+    end
 
     // for I-format
     Regfile reg_file(
@@ -86,7 +123,6 @@ module CPU(
         .wd3(result),
         .we3(reg_write)
     );
-    assign write_data = rd2;
 
     //logic   data_address = rd1 + instr[11: 0];
     /*
@@ -117,34 +153,54 @@ module CPU(
     assign pc_target = pc + imm_ext;
 
     logic   [31:0] alu_result;
+    logic   [31:0] srca;
     logic   [31:0] srcb;
+    // non architectural register
+    logic   [31:0] alu_out;
+    
+    always_ff @(posedge clk) begin
+        if (rst) begin
+            alu_out <= 0;
+        end else begin
+            alu_out <= alu_result;
+        end
+    end
+    
+    always_comb begin
+        case(alu_src_a)
+            2'b00 : srca = pc;
+            2'b01 : srca = old_pc;
+            2'b10 : srca = a;
+            default : srca = 32'hdeadbeef;
+        endcase
+    end
 
-    assign srcb = alu_src ? imm_ext : rd2;
+    always_comb begin
+        case(alu_src_b)
+            //2'b00 : srcb = pc;
+            2'b01 : srcb = imm_ext;
+            2'b10 : srcb = 32'd4;
+            default : srcb = 32'hdeadbeef;
+        endcase
+    end
+
     ALU alu(
         .alu_control(alu_control),
-        .srca(rd1),
+        .srca(srca),
         .srcb(srcb),
         .alu_result(alu_result),
         .zero(zero)
     );
-
-    logic   [31: 0] read_data;
     logic   [31: 0] result;
-    // assign result = result_src ? read_data : alu_result;
     always_comb begin
         case(result_src)
-            2'b00 : result = alu_result;
-            2'b01 : result = read_data;
-            2'b10 : result = pc_plus_4;
+            2'b00 : result = alu_out;
+            2'b01 : result = data;
+            2'b10 : result = alu_result;
             default : result = 32'hdeadbeef;
         endcase
     end
-    DMemory data_memory(
-        .clk(clk),
-        .address(alu_result),
-        .read_data(read_data),
-        .write_enable(mem_write),
-        .write_data(write_data)
-    );
+
+
 endmodule
 `default_nettype wire

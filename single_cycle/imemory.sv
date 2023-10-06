@@ -8,7 +8,7 @@ module IMemory(
 logic [7:0] mem [0:4095];
 
 initial begin
-    int fd = $fopen("./program.bin", "rb");
+    int fd = $fopen("../program/program.bin", "rb");
     int i = 0;
     int res = 1;
     res = $fread(mem, fd, 0, 4096);

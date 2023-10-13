@@ -10,10 +10,10 @@ module Memory (
 
 logic [7:0] memory [0:4095];
 
+int fd = $fopen("../program/program.bin", "rb");
+int i = 0;
+int res = 1;
 initial begin
-    int fd = $fopen("../program/program.bin", "rb");
-    int i = 0;
-    int res = 1;
     res = $fread(memory, fd, 0, 4096);
     $fclose(fd);
 end

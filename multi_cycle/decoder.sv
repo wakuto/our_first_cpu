@@ -13,8 +13,8 @@ module Decoder(
     output  logic       mem_write,
     output  logic       ir_write,
     output  logic [1:0] result_src,
-    output  logic       alu_src_b,
-    output  logic       alu_src_a,
+    output  logic [1:0] alu_src_b,
+    output  logic [1:0] alu_src_a,
     output  logic       adr_src,
     output  logic [2:0] alu_control,
     output  logic [1:0] imm_src
@@ -79,6 +79,16 @@ always_ff @(posedge clk) begin
 end
 
 always_comb begin
+    reg_write   = 0;
+    mem_write   = 0;
+    ir_write    = 0;
+    result_src  = 0;
+    alu_src_b   = 0;
+    alu_src_a   = 0;
+    adr_src     = 0;
+    alu_control = 0;
+    branch      = 0;
+    pc_update   = 0;
     case (state)
         FETCH : begin
             adr_src     = 0;
@@ -108,9 +118,9 @@ always_comb begin
             reg_write    = 1;
         end
         MEMWRITE : begin
-            result_src   = 2'b01;
+            result_src   = 2'b00;
             adr_src      = 2'b01;
-            mem_write    = 2'b00;
+            mem_write    = 2'b01;
         end
         EXECUTER : begin
             alu_src_a   = 2'b10;
@@ -126,94 +136,46 @@ always_comb begin
             alu_src_b   = 2'b01;
             alu_op      = 2'b10;
         end
+        JAL: begin
+            alu_src_a   = 2'b01;
+            alu_src_b   = 2'b10;
+            alu_op      = 2'b00;
+            result_src  = 2'b00;
+            pc_update   = 1;
+        end
+        BEQ: begin
+            alu_src_a   = 2'b10;
+            alu_src_b   = 2'b00;
+            alu_op      = 2'b01;
+            result_src  = 2'b00;
+            branch      = 1;
+        end
+        default: begin
+        end
     endcase
 end
 
 always_comb begin
     case (op)
         // lw
-        7'b0000011 : begin
-            reg_write  = 1;
-            imm_src    = 2'b0;
-            alu_src    = 1;
-            mem_write  = 0;
-            result_src = 1;
-            alu_op     = 2'b0;
-            pc_src     = 2'b0;
-        end
+        7'b0000011 : imm_src    = 2'b0;
         // sw
-        7'b0100011 : begin
-            reg_write  = 0;
-            imm_src    = 2'b01;
-            alu_src    = 1;
-            mem_write  = 1;
-            result_src = 0;
-            alu_op     = 2'b00;
-            pc_src     = 2'b0;
-        end
+        7'b0100011 : imm_src    = 2'b01;
         // R-形式
-        7'b0110011 : begin
-            reg_write  = 1;
-            imm_src    = 0;
-            alu_src    = 0;
-            mem_write  = 0;
-            result_src = 0;
-            alu_op     = 2'b10;
-            pc_src     = 2'b00;
-        end
+        7'b0110011 : imm_src    = 0;
         // beq
-        7'b1100011 : begin
-            reg_write  = 0;
-            imm_src    = 2'b10;
-            alu_src    = 0;
-            mem_write  = 0;
-            result_src = 0;
-            alu_op     = 2'b01;
-            pc_src     = {1'b0, zero};
-        end
+        7'b1100011 : imm_src    = 2'b10;
         // addi
-        7'b0010011 : begin
-            reg_write  = 1;
-            imm_src    = 2'b00;
-            alu_src    = 1;
-            mem_write  = 0;
-            result_src = 0;
-            alu_op     = 2'b10;
-            pc_src     = 2'b00;
-        end
+        7'b0010011 : imm_src    = 2'b00;
         // jal
-        7'b1101111 : begin
-            reg_write  = 1;
-            imm_src    = 2'b11;
-            alu_src    = 0;
-            mem_write  = 0;
-            result_src = 2'b10;
-            alu_op     = 2'b00;
-            pc_src     = 2'b01;
-        end
+        7'b1101111 : imm_src    = 2'b11;
         // jalr
-        7'b1100111 : begin
-            reg_write  = 1;
-            imm_src    = 2'b00;
-            alu_src    = 1;
-            mem_write  = 0;
-            result_src = 2'b10;
-            alu_op     = 2'b10;
-            pc_src     = 2'b10;
-        end
-        default : begin
-            reg_write  = 0;
-            imm_src    = 0;
-            alu_src    = 0;
-            mem_write  = 0;
-            result_src = 0;
-            alu_op     = 0;
-            pc_src     = 2'b00;
-        end
+        7'b1100111 : imm_src    = 2'b00;
+        default : imm_src    = 0;
     endcase
     
 end
-
+    
 logic [1:0] op5_funct7_5;
 assign op5_funct7_5 = {op[5],funct7[5]};
 

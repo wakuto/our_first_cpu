@@ -17,7 +17,7 @@ always_comb begin
         3'b011 : alu_result = srca | srcb;
         3'b101 : alu_result = srca < srcb;
         default: begin
-            alu_result = 32'hDEADBEEF;
+            alu_result = 32'hdead0005;
             $display("Unknown ALU command.");
         end
     endcase

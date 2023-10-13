@@ -1,4 +1,4 @@
-MODULES = alu.sv cpu.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv
+MODULES = alu.sv cpu.sv decoder.sv memory.sv regfile.sv cpu_test.sv
 
 all: cpu
 
@@ -8,10 +8,13 @@ cpu: $(MODULES)
 program.bin:
 	make -C ../program
 
+dump:
+	make -C ../program dump
+
 run: cpu program.bin
 	vvp cpu
 
 clean:
 	rm -rf cpu cpu.vcd
 
-.PHONY: all run clean
+.PHONY: all run clean dump

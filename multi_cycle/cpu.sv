@@ -24,8 +24,8 @@ module CPU(
     logic           ir_write;
     logic           adr_src;
     logic           pc_write;
-    logic           alu_src_a;
-    logic           alu_src_b;
+    logic   [1:0]   alu_src_a;
+    logic   [1:0]   alu_src_b;
     
     logic  [31:0]  read_data;
     logic  [31:0]  adr;
@@ -80,18 +80,23 @@ module CPU(
     assign funct3 = instr[14:12];
 
     Decoder decoder(
+        .clk(clk),
+        .rst(rst),
         .zero(zero),
         .op(op),
         .funct3(funct3),
         .funct7(funct7),
 
-        .pc_src(pc_src),
-        .result_src(result_src),
+        .pc_write(pc_write),
+        .reg_write(reg_write),
         .mem_write(mem_write),
+        .ir_write(ir_write),
+        .result_src(result_src),
+        .alu_src_a(alu_src_a),
+        .alu_src_b(alu_src_b),
+        .adr_src(adr_src),
         .alu_control(alu_control),
-        .alu_src(alu_src),
-        .imm_src(imm_src),
-        .reg_write(reg_write)
+        .imm_src(imm_src)
     );
 
     logic   [31: 0] rd1, rd2;
@@ -143,7 +148,7 @@ module CPU(
             2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
             // J-Type
             2'b11: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
-            default: extend = 32'hdeadbeef;
+            default: extend = 32'hdead0001;
         endcase
     endfunction
 
@@ -171,16 +176,16 @@ module CPU(
             2'b00 : srca = pc;
             2'b01 : srca = old_pc;
             2'b10 : srca = a;
-            default : srca = 32'hdeadbeef;
+            default : srca = 32'hdead0002;
         endcase
     end
 
     always_comb begin
         case(alu_src_b)
-            //2'b00 : srcb = pc;
+            2'b00 : srcb = write_data;
             2'b01 : srcb = imm_ext;
             2'b10 : srcb = 32'd4;
-            default : srcb = 32'hdeadbeef;
+            default : srcb = 32'hdead0003;
         endcase
     end
 
@@ -197,7 +202,7 @@ module CPU(
             2'b00 : result = alu_out;
             2'b01 : result = data;
             2'b10 : result = alu_result;
-            default : result = 32'hdeadbeef;
+            default : result = 32'hdead0004;
         endcase
     end
 

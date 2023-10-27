@@ -17,12 +17,14 @@ module Hazard (
     output logic      stall_d,
     output logic      flush_d,
     output logic      flush_e,
+    output logic      forward_rd2_d,
     output logic [1:0]forward_a_e,
     output logic [1:0]forward_b_e
 );
 logic lwstall;
 
 always_comb begin
+    forward_rd2_d = rs2_d == rd_w;
     if(((rs1_e == rd_m) & reg_write_m) & (rs1_e != 0)) begin
         forward_a_e = 2'b10;
     end

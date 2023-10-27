@@ -93,6 +93,7 @@ module CPU(
     logic           stall_d;
     logic           flush_d;
     logic           flush_e;
+    logic           forward_rd2_d;
     logic  [1:0]    forward_a_e;
     logic  [1:0]    forward_b_e;
 
@@ -222,7 +223,7 @@ module CPU(
             rs2_e <= 0;
         end else begin
             rd1_e <= rd1_d;
-            rd2_e <= rd2_d;
+            rd2_e <= forward_rd2_d ? result_w : rd2_d;
             pc_e <= pc_d;
             imm_ext_e <= imm_ext_d;
             pc_plus_4_e <= pc_plus_4_d;
@@ -350,6 +351,7 @@ module CPU(
         .stall_d(stall_d),
         .flush_d(flush_d),
         .flush_e(flush_e),
+        .forward_rd2_d(forward_rd2_d),
         .forward_a_e(forward_a_e),
         .forward_b_e(forward_b_e)
     );

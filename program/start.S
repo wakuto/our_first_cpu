@@ -26,6 +26,7 @@ loop:
     beq x4, x5, .end
     beq x0, x0, loop
 .end:
+    beq x0, x0, .end
 
 #    # スタックの初期化
 #    addi sp, x0, 1023

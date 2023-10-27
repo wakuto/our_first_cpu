@@ -1,4 +1,4 @@
-MODULES = alu.sv cpu.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv
+MODULES = alu.sv cpu.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv
 
 all: cpu
 

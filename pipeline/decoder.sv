@@ -1,18 +1,18 @@
 `default_nettype none
 
 module Decoder(
-    input   wire       zero,
     input   wire [6:0] op,
     input   wire [2:0] funct3,
     input   wire [6:0] funct7,
 
-    output  logic [1:0] pc_src,
     output  logic [1:0] result_src,
     output  logic       mem_write,
     output  logic [2:0] alu_control,
     output  logic       alu_src,
     output  logic [1:0] imm_src,
-    output  logic       reg_write
+    output  logic       reg_write,
+    output  logic       jump,
+    output  logic       branch
 );
 
 logic [1:0] alu_op;
@@ -27,7 +27,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 1;
             alu_op     = 2'b0;
-            pc_src     = 2'b0;
+            branch     = 1'b0;
+            jump       = 1'b0;
         end
         // sw
         7'b0100011 : begin
@@ -37,7 +38,8 @@ always_comb begin
             mem_write  = 1;
             result_src = 0;
             alu_op     = 2'b00;
-            pc_src     = 2'b0;
+            branch     = 1'b0;
+            jump       = 1'b0;
         end
         // R-形式
         7'b0110011 : begin
@@ -47,7 +49,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 0;
             alu_op     = 2'b10;
-            pc_src     = 2'b00;
+            branch     = 1'b0;
+            jump       = 1'b0;
         end
         // beq
         7'b1100011 : begin
@@ -57,7 +60,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 0;
             alu_op     = 2'b01;
-            pc_src     = {1'b0, zero};
+            branch     = 1'b1;
+            jump       = 1'b0;
         end
         // addi
         7'b0010011 : begin
@@ -67,7 +71,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 0;
             alu_op     = 2'b10;
-            pc_src     = 2'b00;
+            branch     = 1'b0;
+            jump       = 1'b0;
         end
         // jal
         7'b1101111 : begin
@@ -77,7 +82,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 2'b10;
             alu_op     = 2'b00;
-            pc_src     = 2'b01;
+            branch     = 1'b0;
+            jump       = 1'b1;
         end
         // jalr
         7'b1100111 : begin
@@ -87,7 +93,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 2'b10;
             alu_op     = 2'b10;
-            pc_src     = 2'b10;
+            branch     = 1'b0;
+            jump       = 1'b1;
         end
         default : begin
             reg_write  = 0;
@@ -96,7 +103,8 @@ always_comb begin
             mem_write  = 0;
             result_src = 0;
             alu_op     = 0;
-            pc_src     = 2'b00;
+            branch     = 1'b0;
+            jump       = 1'b0;
         end
     endcase
     

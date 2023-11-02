@@ -5,3 +5,6 @@ cpu
 *.elf
 *.bin
 *.o
+
+# settingfs directory
+.vscode

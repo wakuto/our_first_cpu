@@ -1,0 +1,8 @@
+testディレクトリの運用方法
+　新しく命令を追加した際は, testディレクトリ内に命令をテストするためのアセンブリを作成する.アセンブリファイルの名前は, 「(命令名).S」とする.
+　実際に命令の動作テストを行う際は, まず, imemory.svのfopenを以下のように書き換える.
+    int fd = $fopen("../test/test.bin", "rb");
+　その後に, pipeline内で「make test TARGET=(命令名)」と実行する.
+　
+例:
+make test TARGET=jalr

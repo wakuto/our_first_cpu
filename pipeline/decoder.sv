@@ -12,7 +12,10 @@ module Decoder(
     output  logic [1:0] imm_src,
     output  logic       reg_write,
     output  logic       jump,
-    output  logic       branch
+    output  logic       branch,
+    
+    //追加した制御信号
+    output logic  pc_alu_src //jar or jalr
 );
 
 logic [1:0] alu_op;
@@ -62,6 +65,8 @@ always_comb begin
             alu_op     = 2'b01;
             branch     = 1'b1;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
+
         end
         // addi
         7'b0010011 : begin
@@ -84,6 +89,7 @@ always_comb begin
             alu_op     = 2'b00;
             branch     = 1'b0;
             jump       = 1'b1;
+            pc_alu_src = 1'b0;
         end
         // jalr
         7'b1100111 : begin
@@ -95,6 +101,7 @@ always_comb begin
             alu_op     = 2'b10;
             branch     = 1'b0;
             jump       = 1'b1;
+            pc_alu_src = 1'b1;
         end
         default : begin
             reg_write  = 0;

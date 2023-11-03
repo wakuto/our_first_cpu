@@ -8,7 +8,13 @@ cpu: $(MODULES)
 program.bin:
 	make -C ../program
 
+test.bin:
+	make -C ../test
+
 run: cpu program.bin
+	vvp cpu
+
+test: cpu test.bin
 	vvp cpu
 
 clean:

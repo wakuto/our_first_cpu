@@ -17,6 +17,8 @@ module CPU(
     logic           alu_src_d;
     logic   [1:0]   imm_src_d;
 
+    logic           pc_alu_src_d;
+
     //PC
     logic [31:0] pc_next;
     logic [31:0] pc_plus_4_f;
@@ -53,6 +55,9 @@ module CPU(
     logic           branch_e;
     logic   [2:0]   alu_control_e;
     logic           alu_src_e;
+    logic           pc_alu_src_e;
+    logic   [31:0]  pc_alu_src_a;
+
 
     logic   [4: 0] rs1_e, rs2_e;
 
@@ -157,7 +162,10 @@ module CPU(
         .branch(branch_d),
         .alu_control(alu_control_d),
         .alu_src(alu_src_d),
-        .imm_src(imm_src_d)
+        .imm_src(imm_src_d),
+
+        .pc_alu_src(pc_alu_src_d)
+
     );
 
     // for I-format
@@ -199,7 +207,22 @@ module CPU(
 
     assign imm_ext_d = extend(imm_src_d, instr_d);
 
-    assign pc_target_e = pc_e + imm_ext_e;
+    // assign pc_target_e = pc_e + imm_ext_e;
+    assign pc_target_e = pc_alu_src_a + imm_ext_e;
+    always_comb begin
+        case(pc_alu_src_e)
+            1'b0: pc_alu_src_a = pc_e;
+            1'b1: begin
+                case(forward_a_e)
+                    2'b00 : pc_alu_src_a = rd1_e;
+                    2'b01 : pc_alu_src_a = result_w;
+                    2'b10 : pc_alu_src_a = alu_result_m;
+                    default : pc_alu_src_a = 32'hBAD0001;
+                endcase
+            end
+            default : pc_alu_src_a = 32'hBAD0002;
+        endcase
+    end
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin
@@ -218,6 +241,7 @@ module CPU(
             branch_e <= 0;
             alu_control_e <= 0;
             alu_src_e <= 0;
+            pc_alu_src_e <= 0;
 
             rs1_e <= 0;
             rs2_e <= 0;
@@ -236,6 +260,7 @@ module CPU(
             branch_e <= branch_d;
             alu_control_e <= alu_control_d;
             alu_src_e <= alu_src_d;
+            pc_alu_src_e <= pc_alu_src_d;
 
             rs1_e <= rs1_d;
             rs2_e <= rs2_d;

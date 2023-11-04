@@ -15,7 +15,7 @@ always_comb begin
         3'b001 : alu_result = srca - srcb;
         3'b010 : alu_result = srca & srcb;
         3'b011 : alu_result = srca | srcb;
-        3'b101 : alu_result = srca < srcb;
+        3'b101 : alu_result = $signed(srca) < $signed(srcb);
         default: begin
             alu_result = 32'hDEADBEEF;
             $display("Unknown ALU command.");

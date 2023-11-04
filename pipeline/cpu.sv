@@ -13,7 +13,7 @@ module CPU(
     logic           mem_write_d;
     logic           jump_d;
     logic           branch_d;
-    logic   [2:0]   alu_control_d;
+    logic   [3:0]   alu_control_d;
     logic           alu_src_d;
     logic   [1:0]   imm_src_d;
 
@@ -32,7 +32,7 @@ module CPU(
     // IF/ID register
     logic   [31: 0] instr_d;
     logic   [31: 0] pc_d;
-    logic   [31: 0] pc_plus_4_d; 
+    logic   [31: 0] pc_plus_4_d;
 
     // Decode stage
     logic   [31: 0] rd1_d, rd2_d;
@@ -53,7 +53,7 @@ module CPU(
     logic           mem_write_e;
     logic           jump_e;
     logic           branch_e;
-    logic   [2:0]   alu_control_e;
+    logic   [3:0]   alu_control_e;
     logic           alu_src_e;
     logic           pc_alu_src_e;
     logic   [31:0]  pc_alu_src_a;

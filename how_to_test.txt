@@ -6,3 +6,8 @@ testディレクトリの運用方法
 　
 例:
 make test TARGET=jalr
+
+testコード一覧
+・jalr
+・i-type
+・r-type

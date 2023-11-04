@@ -69,6 +69,7 @@ module CPU(
     
     logic          pc_src_e;
     logic          zero_e;
+    logic          branch_result_e;
     
     // EX/MEM register
     logic   [31:0] alu_result_m;
@@ -108,7 +109,8 @@ module CPU(
     );
 
     assign pc_plus_4_f = pc_f + 4;
-    assign pc_src_e = jump_e | (branch_e & zero_e);
+    assign pc_src_e = jump_e | branch_result_e;
+
     always_comb begin
         case(pc_src_e)
             2'b00:   pc_next   = pc_plus_4_f;
@@ -116,6 +118,15 @@ module CPU(
             // 2'b10:   pc_next   = alu_result;
             default: pc_next = 32'hdeadbeef;
         endcase
+    end
+
+    always_comb begin
+        if (branch_e) begin
+            branch_result_e = alu_result_e[0];
+        end
+        else begin
+            branch_result_e = 1'b0;
+        end
     end
 
     always_ff @(posedge clk) begin

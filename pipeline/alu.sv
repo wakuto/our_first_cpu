@@ -1,7 +1,7 @@
 `default_nettype none
 
 module ALU (
-    input  wire  [2:0]   alu_control,
+    input  wire  [3:0]   alu_control,
     input  wire [31:0]   srca,
     input  wire [31:0]   srcb,
 
@@ -11,11 +11,11 @@ module ALU (
 
 always_comb begin
     case (alu_control)
-        3'b000 : alu_result = srca + srcb;
-        3'b001 : alu_result = srca - srcb;
-        3'b010 : alu_result = srca & srcb;
-        3'b011 : alu_result = srca | srcb;
-        3'b101 : alu_result = $signed(srca) < $signed(srcb);
+        4'b0000 : alu_result = srca + srcb;
+        4'b0001 : alu_result = srca - srcb;
+        4'b0010 : alu_result = srca & srcb;
+        4'b0011 : alu_result = srca | srcb;
+        4'b0101 : alu_result = $signed(srca) < $signed(srcb);
         default: begin
             alu_result = 32'hDEADBEEF;
             $display("Unknown ALU command.");

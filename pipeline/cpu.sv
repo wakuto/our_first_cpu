@@ -293,7 +293,7 @@ module CPU(
 
     ALU alu(
         .alu_control(alu_control_e),
-        .srca(rd1_e),
+        .srca(pc_alu_src_a_e),
         .srcb(srcb_e),
         .alu_result(alu_result_e),
         .zero(zero_e)

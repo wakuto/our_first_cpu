@@ -17,7 +17,7 @@ BNE_TEST:
 BLT_TEST:
     addi t2, x0, -1
     # -1<1
-    blt t2, t1, BLTU_TEST
+    blt t2, t0, BLTU_TEST
     nop
     nop
     nop
@@ -28,7 +28,7 @@ BLT_TEST:
 
 BLTU_TEST:
     # 1<デカい数
-    bltu t1, t2, BGE_TEST
+    bltu t0, t2, BGE_TEST
     nop
     nop
     nop
@@ -48,8 +48,8 @@ BGE_TEST:
     nop
 
 BGEU_TEST:
-    # 1<デカい数
-    bgeu t2, t3, .end
+    # 1<=デカい数
+    bgeu t0, t3, .end
     nop
     nop
     nop

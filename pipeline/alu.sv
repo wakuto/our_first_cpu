@@ -18,9 +18,9 @@ always_comb begin
         4'b0100 : alu_result = srca ^ srcb;
         4'b0101 : alu_result = $signed(srca) < $signed(srcb);
         4'b0110 : alu_result = $unsigned(srca) < $unsigned(srcb);
-        4'b0111 : alu_result = srca << srcb;
-        4'b1000 : alu_result = srca >> srcb;
-        4'b1001 : alu_result = srca >>> srcb;
+        4'b0111 : alu_result = $signed(srca) << srcb[4:0];
+        4'b1000 : alu_result = $signed(srca) >> srcb[4:0];
+        4'b1001 : alu_result = $signed(srca) >>> srcb[4:0];
         4'b1010 : alu_result = srca == srcb;
         4'b1011 : alu_result = srca != srcb;
         4'b1100 : alu_result = $signed(srca) >= $signed(srcb);

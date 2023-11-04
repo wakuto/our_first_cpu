@@ -37,5 +37,15 @@ _start:
     # xor : 0 ^ 0 = 0
     xor s3, x0, x0
 
+    # sll
+    # addi : s4 = -12 (FFFF FFF4)
+    addi s4, x0, -12
+    # srl : s5 = s4 >> 1 (7FFF FFFA)
+    srl s5, s4, s2
+    # sll : s5 = s4 << 1 (FFFF FFE8)
+    sll s5, s4, s2
+    # sra : s6 = s5 >>> 1 (FFFF FFF4)
+    sra s6, s5, s2
+
 .end:
     beq x0, x0, .end

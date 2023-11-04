@@ -148,8 +148,15 @@ always_comb begin
                             default : alu_control = 4'b0000;
                         endcase
                     end
+                    3'b001 : alu_control = 4'b0111;
                     3'b010 : alu_control = 4'b0101;
                     3'b100 : alu_control = 4'b0100;
+                    3'b101 : begin
+                        case(op5_funct7_5)
+                            2'b11 : alu_control = 4'b1001;
+                            default : alu_control = 4'b1000;
+                        endcase
+                    end
                     3'b110 : alu_control = 4'b0011;
                     3'b111 : alu_control = 4'b0010;
                     default : alu_control = 4'b0000;

@@ -30,6 +30,12 @@ _start:
     # t6 : 2<-3 = 0
     slt t6, t0, s1
 
+    # xor
+    addi s2, x0 ,1
+    # xor : 1 ^ 0 = 1
+    xor s3, x0, s2
+    # xor : 0 ^ 0 = 0
+    xor s3, x0, x0
 
 .end:
     beq x0, x0, .end

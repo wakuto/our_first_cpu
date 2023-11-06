@@ -38,7 +38,7 @@ BLTU_TEST:
 
 BGE_TEST:
     addi t3, x0, -1
-    # -1<=-1
+    # -1>=-1
     bge t2, t3, BGEU_TEST
     nop
     nop
@@ -48,8 +48,8 @@ BGE_TEST:
     nop
 
 BGEU_TEST:
-    # 1<=デカい数
-    bgeu t0, t3, .end
+    # デカい数>=1
+    bgeu t2, t0, .end
     nop
     nop
     nop

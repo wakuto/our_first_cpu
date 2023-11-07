@@ -27,12 +27,14 @@ module CPU(
     // Instruction
     logic   [6:0] op;
     logic   [6:0] funct7;
-    logic   [2:0] funct3;
+    logic   [2:0] funct3_d;
 
     // IF/ID register
     logic   [31: 0] instr_d;
     logic   [31: 0] pc_d;
     logic   [31: 0] pc_plus_4_d;
+
+    logic   [1:0]  op5_op4_d;
 
     // Decode stage
     logic   [31: 0] rd1_d, rd2_d;
@@ -58,6 +60,9 @@ module CPU(
     logic           pc_alu_src_e;
     logic   [31:0]  pc_alu_src_a;
 
+    logic   [1:0]  op5_op4_e;
+    logic   [2:0]  funct3_e;
+
 
     logic   [4: 0] rs1_e, rs2_e;
 
@@ -71,6 +76,7 @@ module CPU(
     logic          zero_e;
     logic          branch_result_e;
     
+    
     // EX/MEM register
     logic   [31:0] alu_result_m;
     logic   [31:0] write_data_m;
@@ -80,6 +86,9 @@ module CPU(
     logic           reg_write_m;
     logic   [1:0]   result_src_m;
     logic           mem_write_m;
+
+    logic   [1:0]  op5_op4_m;
+    logic   [2:0]  funct3_m;
 
     //Data Memory
     logic   [31: 0] read_data_m;
@@ -93,6 +102,10 @@ module CPU(
 
     logic           reg_write_w;
     logic   [1:0]   result_src_w;
+
+    logic   [31:0] wd3_w;
+    logic   [1:0]  op5_op4_w;
+    logic   [2:0]  funct3_w;
     
     // hazard signal
     logic           stall_f;
@@ -159,11 +172,13 @@ module CPU(
 
     assign op     = instr_d[6:0];
     assign funct7 = instr_d[31:25];
-    assign funct3 = instr_d[14:12];
+    assign funct3_d = instr_d[14:12];
+
+    assign op5_op4_d = op[5:4];
 
     Decoder decoder(
         .op(op),
-        .funct3(funct3),
+        .funct3(funct3_d),
         .funct7(funct7),
 
         .reg_write(reg_write_d),
@@ -178,7 +193,21 @@ module CPU(
         .pc_alu_src(pc_alu_src_d)
 
     );
-
+    always_comb begin
+        case(op5_op4_w)
+            2'b00: begin
+                case(funct3_w)
+                    3'b000:  wd3_w = $signed(result_w[7:0]);
+                    3'b001:  wd3_w = $signed(result_w[15:0]);
+                    3'b010:  wd3_w = result_w;
+                    3'b100:  wd3_w = $unsigned(result_w[7:0]);
+                    3'b101:  wd3_w = $unsigned(result_w[15:0]);
+                    default: wd3_w = result_w;
+                endcase
+            end
+            default: wd3_w = result_w;
+        endcase
+    end
     // for I-format
     Regfile reg_file(
         .clk(clk),
@@ -190,7 +219,7 @@ module CPU(
         .rd2(rd2_d),
 
         .addr3(rd_w),
-        .wd3(result_w),
+        .wd3(wd3_w),
         .we3(reg_write_w)
     );
 
@@ -256,6 +285,9 @@ module CPU(
 
             rs1_e <= 0;
             rs2_e <= 0;
+
+            op5_op4_e <= 0;
+            funct3_e <= 0;
         end else begin
             rd1_e <= rd1_d;
             rd2_e <= forward_rd2_d ? result_w : rd2_d;
@@ -275,6 +307,9 @@ module CPU(
 
             rs1_e <= rs1_d;
             rs2_e <= rs2_d;
+
+            op5_op4_e <= op5_op4_d;
+            funct3_e <= funct3_d;
         end
     end
 
@@ -330,6 +365,9 @@ module CPU(
             reg_write_m <= 0;
             result_src_m <= 0;
             mem_write_m <= 0;
+
+            op5_op4_m <= 0;
+            funct3_m <= 0;
         end else begin
             alu_result_m <= alu_result_e;
             write_data_m <= write_data_e;
@@ -339,6 +377,10 @@ module CPU(
             reg_write_m <= reg_write_e;
             result_src_m <= result_src_e;
             mem_write_m <= mem_write_e;
+
+
+            op5_op4_m <= op5_op4_e;
+            funct3_m <= funct3_e;
         end
     end
 
@@ -359,6 +401,9 @@ module CPU(
 
             reg_write_w <= 0;
             result_src_w <= 0;
+
+            op5_op4_w <= 0;
+            funct3_w <= 0;
         end else begin
             alu_result_w <= alu_result_m;
             read_data_w <= read_data_m;
@@ -367,6 +412,10 @@ module CPU(
 
             reg_write_w <=  reg_write_m;
             result_src_w <= result_src_m;
+
+
+            op5_op4_w <= op5_op4_m;
+            funct3_w <= funct3_m;
         end
     end
     

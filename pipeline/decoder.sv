@@ -22,7 +22,7 @@ logic [1:0] alu_op;
 
 always_comb begin
     case (op)
-        // lw
+        // lw,lb,lh,lbu,lhu
         7'b0000011 : begin
             reg_write  = 1;
             imm_src    = 2'b0;
@@ -33,7 +33,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
         end
-        // sw
+        // sw,sb,sh(S-形式)
         7'b0100011 : begin
             reg_write  = 0;
             imm_src    = 2'b01;
@@ -55,7 +55,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
         end
-        // beq
+        // B-形式
         7'b1100011 : begin
             reg_write  = 0;
             imm_src    = 2'b10;
@@ -67,7 +67,7 @@ always_comb begin
             jump       = 1'b0;
             pc_alu_src = 1'b0;
         end
-        // addi
+        // addi,slli,slti,sltiu,xori,srli,srai,ori,andi
         7'b0010011 : begin
             reg_write  = 1;
             imm_src    = 2'b00;

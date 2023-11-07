@@ -389,7 +389,8 @@ module CPU(
         .address(alu_result_m),
         .read_data(read_data_m),
         .write_enable(mem_write_m),
-        .write_data(write_data_m)
+        .write_data(write_data_m),
+        .funct3(funct3_m)
     );
     
     always_ff @(posedge clk) begin

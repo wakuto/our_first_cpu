@@ -9,13 +9,13 @@ module CPU(
 
     // control signal
     logic           reg_write_d;
-    logic   [1:0]   result_src_d;
+    logic   [2:0]   result_src_d;
     logic           mem_write_d;
     logic           jump_d;
     logic           branch_d;
     logic   [3:0]   alu_control_d;
     logic           alu_src_d;
-    logic   [1:0]   imm_src_d;
+    logic   [2:0]   imm_src_d;
 
     logic           pc_alu_src_d;
 
@@ -51,7 +51,7 @@ module CPU(
     logic   [4 :0] rd_e;
 
     logic           reg_write_e;
-    logic   [1:0]   result_src_e;
+    logic   [2:0]   result_src_e;
     logic           mem_write_e;
     logic           jump_e;
     logic           branch_e;
@@ -84,11 +84,15 @@ module CPU(
     logic   [4 :0] rd_m;
     
     logic           reg_write_m;
-    logic   [1:0]   result_src_m;
+    logic   [2:0]   result_src_m;
     logic           mem_write_m;
 
     logic   [1:0]  op5_op4_m;
     logic   [2:0]  funct3_m;
+
+    logic   [31:0] imm_ext_m;
+    logic [31:0] pc_target_m;
+
 
     //Data Memory
     logic   [31: 0] read_data_m;
@@ -101,11 +105,15 @@ module CPU(
     logic   [4 :0] rd_w;
 
     logic           reg_write_w;
-    logic   [1:0]   result_src_w;
+    logic   [2:0]   result_src_w;
 
     logic   [31:0] wd3_w;
     logic   [1:0]  op5_op4_w;
     logic   [2:0]  funct3_w;
+
+    logic   [31:0] imm_ext_w;
+    logic [31:0] pc_target_w;
+
     
     // hazard signal
     logic           stall_f;
@@ -231,16 +239,18 @@ module CPU(
         関数名 = 入力1 + 入力2;
     endfunction
     */
-    function [31: 0] extend(input [1:0] imm_src, input [31:0] instr);
+    function [31: 0] extend(input [2:0] imm_src, input [31:0] instr);
         case(imm_src)
             // I-Type
-            2'b00: extend = 32'(signed'(instr[31 -: 12]));
+            3'b000: extend = 32'(signed'(instr[31 -: 12]));
             // S-Type
-            2'b01: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
+            3'b001: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
             // B-Type
-            2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
+            3'b010: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
             // J-Type
-            2'b11: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
+            3'b011: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
+            //U-Type
+            3'b100: extend = 32'(signed'(instr[31 : 12])) << 12;
             default: extend = 32'hdeadbeef;
         endcase
     endfunction
@@ -348,9 +358,11 @@ module CPU(
     // assign result = result_src ? read_data : alu_result;
     always_comb begin
         case(result_src_w)
-            2'b00 : result_w = alu_result_w;
-            2'b01 : result_w = read_data_w;
-            2'b10 : result_w = pc_plus_4_w;
+            3'b000 : result_w = alu_result_w;
+            3'b001 : result_w = read_data_w;
+            3'b010 : result_w = pc_plus_4_w;
+            3'b011 : result_w = imm_ext_w;
+            3'b100 : result_w = pc_target_w;
             default : result_w = 32'hdeadbeef;
         endcase
     end
@@ -368,6 +380,9 @@ module CPU(
 
             op5_op4_m <= 0;
             funct3_m <= 0;
+
+            imm_ext_m <= 0;
+            pc_target_m <= 0;
         end else begin
             alu_result_m <= alu_result_e;
             write_data_m <= write_data_e;
@@ -381,6 +396,10 @@ module CPU(
 
             op5_op4_m <= op5_op4_e;
             funct3_m <= funct3_e;
+
+            imm_ext_m <= imm_ext_e;
+            pc_target_m <= pc_target_e;
+
         end
     end
 
@@ -405,6 +424,8 @@ module CPU(
 
             op5_op4_w <= 0;
             funct3_w <= 0;
+            imm_ext_w <= 0;
+            pc_target_w <= 0;
         end else begin
             alu_result_w <= alu_result_m;
             read_data_w <= read_data_m;
@@ -414,9 +435,11 @@ module CPU(
             reg_write_w <=  reg_write_m;
             result_src_w <= result_src_m;
 
-
             op5_op4_w <= op5_op4_m;
             funct3_w <= funct3_m;
+
+            imm_ext_w <= imm_ext_m;
+            pc_target_w <= pc_target_m;
         end
     end
     

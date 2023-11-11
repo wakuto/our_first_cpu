@@ -34,7 +34,6 @@ module CPU(
     logic   [31: 0] pc_d;
     logic   [31: 0] pc_plus_4_d;
 
-    logic   [1:0]  op5_op4_d;
 
     // Decode stage
     logic   [31: 0] rd1_d, rd2_d;
@@ -60,7 +59,6 @@ module CPU(
     logic           pc_alu_src_e;
     logic   [31:0]  pc_alu_src_a;
 
-    logic   [1:0]  op5_op4_e;
     logic   [2:0]  funct3_e;
 
 
@@ -87,7 +85,6 @@ module CPU(
     logic   [2:0]   result_src_m;
     logic           mem_write_m;
 
-    logic   [1:0]  op5_op4_m;
     logic   [2:0]  funct3_m;
 
     logic   [31:0] imm_ext_m;
@@ -108,7 +105,6 @@ module CPU(
     logic   [2:0]   result_src_w;
 
     logic   [31:0] wd3_w;
-    logic   [1:0]  op5_op4_w;
     logic   [2:0]  funct3_w;
 
     logic   [31:0] imm_ext_w;
@@ -182,7 +178,6 @@ module CPU(
     assign funct7 = instr_d[31:25];
     assign funct3_d = instr_d[14:12];
 
-    assign op5_op4_d = op[5:4];
 
     Decoder decoder(
         .op(op),
@@ -202,8 +197,8 @@ module CPU(
 
     );
     always_comb begin
-        case(op5_op4_w)
-            2'b00: begin
+        case(result_src_w)
+            3'b001: begin
                 case(funct3_w)
                     3'b000:  wd3_w = $signed(result_w[7:0]);
                     3'b001:  wd3_w = $signed(result_w[15:0]);
@@ -296,7 +291,6 @@ module CPU(
             rs1_e <= 0;
             rs2_e <= 0;
 
-            op5_op4_e <= 0;
             funct3_e <= 0;
         end else begin
             rd1_e <= rd1_d;
@@ -318,7 +312,6 @@ module CPU(
             rs1_e <= rs1_d;
             rs2_e <= rs2_d;
 
-            op5_op4_e <= op5_op4_d;
             funct3_e <= funct3_d;
         end
     end
@@ -378,7 +371,6 @@ module CPU(
             result_src_m <= 0;
             mem_write_m <= 0;
 
-            op5_op4_m <= 0;
             funct3_m <= 0;
 
             imm_ext_m <= 0;
@@ -394,7 +386,6 @@ module CPU(
             mem_write_m <= mem_write_e;
 
 
-            op5_op4_m <= op5_op4_e;
             funct3_m <= funct3_e;
 
             imm_ext_m <= imm_ext_e;
@@ -403,13 +394,22 @@ module CPU(
         end
     end
 
+    logic [3:0] write_mask;
+    always_comb begin
+        case(funct3_m)
+            3'b000: write_mask = 4'b0001;
+            3'b001: write_mask = 4'b0011;
+            3'b010: write_mask = 4'b1111;
+        endcase
+    end
+
     DMemory data_memory(
         .clk(clk),
         .address(alu_result_m),
         .read_data(read_data_m),
         .write_enable(mem_write_m),
         .write_data(write_data_m),
-        .funct3(funct3_m)
+        .write_mask(write_mask)
     );
     
     always_ff @(posedge clk) begin
@@ -422,7 +422,6 @@ module CPU(
             reg_write_w <= 0;
             result_src_w <= 0;
 
-            op5_op4_w <= 0;
             funct3_w <= 0;
             imm_ext_w <= 0;
             pc_target_w <= 0;
@@ -435,7 +434,6 @@ module CPU(
             reg_write_w <=  reg_write_m;
             result_src_w <= result_src_m;
 
-            op5_op4_w <= op5_op4_m;
             funct3_w <= funct3_m;
 
             imm_ext_w <= imm_ext_m;

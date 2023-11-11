@@ -116,7 +116,6 @@ module CPU(
     logic           stall_d;
     logic           flush_d;
     logic           flush_e;
-    logic           forward_rd2_d;
     logic  [1:0]    forward_a_e;
     logic  [1:0]    forward_b_e;
 
@@ -294,7 +293,7 @@ module CPU(
             funct3_e <= 0;
         end else begin
             rd1_e <= rd1_d;
-            rd2_e <= forward_rd2_d ? result_w : rd2_d;
+            rd2_e <= rd2_d;
             pc_e <= pc_d;
             imm_ext_e <= imm_ext_d;
             pc_plus_4_e <= pc_plus_4_d;
@@ -400,6 +399,7 @@ module CPU(
             3'b000: write_mask = 4'b0001;
             3'b001: write_mask = 4'b0011;
             3'b010: write_mask = 4'b1111;
+            default:write_mask = 4'b1111;
         endcase
     end
 
@@ -458,7 +458,6 @@ module CPU(
         .stall_d(stall_d),
         .flush_d(flush_d),
         .flush_e(flush_e),
-        .forward_rd2_d(forward_rd2_d),
         .forward_a_e(forward_a_e),
         .forward_b_e(forward_b_e)
     );

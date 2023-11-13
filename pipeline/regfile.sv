@@ -18,7 +18,7 @@ module Regfile(
 
 logic [31:0] regfile [0:31];
 
-always_ff @(posedge clk) begin
+always_ff @(negedge clk) begin
     if (rst) begin
         for (int i = 0; i < 32; i++) begin
             regfile[i] <= 32'h0;

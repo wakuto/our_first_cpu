@@ -5,11 +5,11 @@ module Decoder(
     input   wire [2:0] funct3,
     input   wire [6:0] funct7,
 
-    output  logic [1:0] result_src,
+    output  logic [2:0] result_src,
     output  logic       mem_write,
     output  logic [3:0] alu_control,
     output  logic       alu_src,
-    output  logic [1:0] imm_src,
+    output  logic [2:0] imm_src,
     output  logic       reg_write,
     output  logic       jump,
     output  logic       branch,
@@ -22,10 +22,10 @@ logic [1:0] alu_op;
 
 always_comb begin
     case (op)
-        // lw
+        // lw,lb,lh,lbu,lhu
         7'b0000011 : begin
             reg_write  = 1;
-            imm_src    = 2'b0;
+            imm_src    = 3'b0;
             alu_src    = 1;
             mem_write  = 0;
             result_src = 1;
@@ -33,10 +33,10 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
         end
-        // sw
+        // sw,sb,sh(S-形式)
         7'b0100011 : begin
             reg_write  = 0;
-            imm_src    = 2'b01;
+            imm_src    = 3'b01;
             alu_src    = 1;
             mem_write  = 1;
             result_src = 0;
@@ -55,10 +55,10 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
         end
-        // beq
+        // B-形式
         7'b1100011 : begin
             reg_write  = 0;
-            imm_src    = 2'b10;
+            imm_src    = 3'b10;
             alu_src    = 0;
             mem_write  = 0;
             result_src = 0;
@@ -67,10 +67,10 @@ always_comb begin
             jump       = 1'b0;
             pc_alu_src = 1'b0;
         end
-        // addi
+        // addi,slli,slti,sltiu,xori,srli,srai,ori,andi
         7'b0010011 : begin
             reg_write  = 1;
-            imm_src    = 2'b00;
+            imm_src    = 3'b00;
             alu_src    = 1;
             mem_write  = 0;
             result_src = 0;
@@ -81,10 +81,10 @@ always_comb begin
         // jal
         7'b1101111 : begin
             reg_write  = 1;
-            imm_src    = 2'b11;
+            imm_src    = 3'b11;
             alu_src    = 0;
             mem_write  = 0;
-            result_src = 2'b10;
+            result_src = 3'b10;
             alu_op     = 2'b00;
             branch     = 1'b0;
             jump       = 1'b1;
@@ -93,14 +93,38 @@ always_comb begin
         // jalr
         7'b1100111 : begin
             reg_write  = 1;
-            imm_src    = 2'b00;
+            imm_src    = 3'b00;
             alu_src    = 1;
             mem_write  = 0;
-            result_src = 2'b10;
+            result_src = 3'b10;
             alu_op     = 2'b10;
             branch     = 1'b0;
             jump       = 1'b1;
             pc_alu_src = 1'b1;
+        end
+        // lui(U-type)
+        7'b0110111 : begin
+            reg_write  = 1;
+            imm_src    = 3'b100;
+            alu_src    = 1;
+            mem_write  = 0;
+            result_src = 3'b11;
+            alu_op     = 2'b0;
+            branch     = 1'b0;
+            jump       = 1'b0;
+            pc_alu_src = 1'b0;
+        end
+        // auipc(U-type)
+        7'b0010111 : begin
+            reg_write  = 1;
+            imm_src    = 3'b100;
+            alu_src    = 1;
+            mem_write  = 0;
+            result_src = 3'b100;
+            alu_op     = 2'b0;
+            branch     = 1'b0;
+            jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
         default : begin
             reg_write  = 0;
@@ -150,9 +174,11 @@ always_comb begin
                     end
                     3'b001 : alu_control = 4'b0111;
                     3'b010 : alu_control = 4'b0101;
+                    3'b011 : alu_control = 4'b0110;
                     3'b100 : alu_control = 4'b0100;
                     3'b101 : begin
                         case(op5_funct7_5)
+                            2'b01 : alu_control = 4'b1001;
                             2'b11 : alu_control = 4'b1001;
                             default : alu_control = 4'b1000;
                         endcase

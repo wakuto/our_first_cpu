@@ -9,13 +9,13 @@ module CPU(
 
     // control signal
     logic           reg_write_d;
-    logic   [1:0]   result_src_d;
+    logic   [2:0]   result_src_d;
     logic           mem_write_d;
     logic           jump_d;
     logic           branch_d;
     logic   [3:0]   alu_control_d;
     logic           alu_src_d;
-    logic   [1:0]   imm_src_d;
+    logic   [2:0]   imm_src_d;
 
     logic           pc_alu_src_d;
 
@@ -27,12 +27,13 @@ module CPU(
     // Instruction
     logic   [6:0] op;
     logic   [6:0] funct7;
-    logic   [2:0] funct3;
+    logic   [2:0] funct3_d;
 
     // IF/ID register
     logic   [31: 0] instr_d;
     logic   [31: 0] pc_d;
     logic   [31: 0] pc_plus_4_d;
+
 
     // Decode stage
     logic   [31: 0] rd1_d, rd2_d;
@@ -49,7 +50,7 @@ module CPU(
     logic   [4 :0] rd_e;
 
     logic           reg_write_e;
-    logic   [1:0]   result_src_e;
+    logic   [2:0]   result_src_e;
     logic           mem_write_e;
     logic           jump_e;
     logic           branch_e;
@@ -57,6 +58,8 @@ module CPU(
     logic           alu_src_e;
     logic           pc_alu_src_e;
     logic   [31:0]  pc_alu_src_a;
+
+    logic   [2:0]  funct3_e;
 
 
     logic   [4: 0] rs1_e, rs2_e;
@@ -71,6 +74,7 @@ module CPU(
     logic          zero_e;
     logic          branch_result_e;
     
+    
     // EX/MEM register
     logic   [31:0] alu_result_m;
     logic   [31:0] write_data_m;
@@ -78,8 +82,14 @@ module CPU(
     logic   [4 :0] rd_m;
     
     logic           reg_write_m;
-    logic   [1:0]   result_src_m;
+    logic   [2:0]   result_src_m;
     logic           mem_write_m;
+
+    logic   [2:0]  funct3_m;
+
+    logic   [31:0] imm_ext_m;
+    logic [31:0] pc_target_m;
+
 
     //Data Memory
     logic   [31: 0] read_data_m;
@@ -92,14 +102,20 @@ module CPU(
     logic   [4 :0] rd_w;
 
     logic           reg_write_w;
-    logic   [1:0]   result_src_w;
+    logic   [2:0]   result_src_w;
+
+    logic   [31:0] wd3_w;
+    logic   [2:0]  funct3_w;
+
+    logic   [31:0] imm_ext_w;
+    logic [31:0] pc_target_w;
+
     
     // hazard signal
     logic           stall_f;
     logic           stall_d;
     logic           flush_d;
     logic           flush_e;
-    logic           forward_rd2_d;
     logic  [1:0]    forward_a_e;
     logic  [1:0]    forward_b_e;
 
@@ -159,11 +175,12 @@ module CPU(
 
     assign op     = instr_d[6:0];
     assign funct7 = instr_d[31:25];
-    assign funct3 = instr_d[14:12];
+    assign funct3_d = instr_d[14:12];
+
 
     Decoder decoder(
         .op(op),
-        .funct3(funct3),
+        .funct3(funct3_d),
         .funct7(funct7),
 
         .reg_write(reg_write_d),
@@ -178,7 +195,21 @@ module CPU(
         .pc_alu_src(pc_alu_src_d)
 
     );
-
+    always_comb begin
+        case(result_src_w)
+            3'b001: begin
+                case(funct3_w)
+                    3'b000:  wd3_w = $signed(result_w[7:0]);
+                    3'b001:  wd3_w = $signed(result_w[15:0]);
+                    3'b010:  wd3_w = result_w;
+                    3'b100:  wd3_w = $unsigned(result_w[7:0]);
+                    3'b101:  wd3_w = $unsigned(result_w[15:0]);
+                    default: wd3_w = result_w;
+                endcase
+            end
+            default: wd3_w = result_w;
+        endcase
+    end
     // for I-format
     Regfile reg_file(
         .clk(clk),
@@ -190,7 +221,7 @@ module CPU(
         .rd2(rd2_d),
 
         .addr3(rd_w),
-        .wd3(result_w),
+        .wd3(wd3_w),
         .we3(reg_write_w)
     );
 
@@ -202,16 +233,18 @@ module CPU(
         関数名 = 入力1 + 入力2;
     endfunction
     */
-    function [31: 0] extend(input [1:0] imm_src, input [31:0] instr);
+    function [31: 0] extend(input [2:0] imm_src, input [31:0] instr);
         case(imm_src)
             // I-Type
-            2'b00: extend = 32'(signed'(instr[31 -: 12]));
+            3'b000: extend = 32'(signed'(instr[31 -: 12]));
             // S-Type
-            2'b01: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
+            3'b001: extend = 32'(signed'({instr[31 -:  7], instr[7 +: 5]}));
             // B-Type
-            2'b10: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
+            3'b010: extend = 32'(signed'({instr[31], instr[7], instr[30:25], instr[11:8],1'b0}));
             // J-Type
-            2'b11: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
+            3'b011: extend = 32'(signed'({instr[31], instr[19:12], instr[20], instr[30:21], 1'b0}));
+            //U-Type
+            3'b100: extend = 32'(signed'(instr[31 : 12])) << 12;
             default: extend = 32'hdeadbeef;
         endcase
     endfunction
@@ -256,9 +289,11 @@ module CPU(
 
             rs1_e <= 0;
             rs2_e <= 0;
+
+            funct3_e <= 0;
         end else begin
             rd1_e <= rd1_d;
-            rd2_e <= forward_rd2_d ? result_w : rd2_d;
+            rd2_e <= rd2_d;
             pc_e <= pc_d;
             imm_ext_e <= imm_ext_d;
             pc_plus_4_e <= pc_plus_4_d;
@@ -275,6 +310,8 @@ module CPU(
 
             rs1_e <= rs1_d;
             rs2_e <= rs2_d;
+
+            funct3_e <= funct3_d;
         end
     end
 
@@ -313,9 +350,11 @@ module CPU(
     // assign result = result_src ? read_data : alu_result;
     always_comb begin
         case(result_src_w)
-            2'b00 : result_w = alu_result_w;
-            2'b01 : result_w = read_data_w;
-            2'b10 : result_w = pc_plus_4_w;
+            3'b000 : result_w = alu_result_w;
+            3'b001 : result_w = read_data_w;
+            3'b010 : result_w = pc_plus_4_w;
+            3'b011 : result_w = imm_ext_w;
+            3'b100 : result_w = pc_target_w;
             default : result_w = 32'hdeadbeef;
         endcase
     end
@@ -330,6 +369,11 @@ module CPU(
             reg_write_m <= 0;
             result_src_m <= 0;
             mem_write_m <= 0;
+
+            funct3_m <= 0;
+
+            imm_ext_m <= 0;
+            pc_target_m <= 0;
         end else begin
             alu_result_m <= alu_result_e;
             write_data_m <= write_data_e;
@@ -339,7 +383,24 @@ module CPU(
             reg_write_m <= reg_write_e;
             result_src_m <= result_src_e;
             mem_write_m <= mem_write_e;
+
+
+            funct3_m <= funct3_e;
+
+            imm_ext_m <= imm_ext_e;
+            pc_target_m <= pc_target_e;
+
         end
+    end
+
+    logic [3:0] write_mask;
+    always_comb begin
+        case(funct3_m)
+            3'b000: write_mask = 4'b0001;
+            3'b001: write_mask = 4'b0011;
+            3'b010: write_mask = 4'b1111;
+            default:write_mask = 4'b1111;
+        endcase
     end
 
     DMemory data_memory(
@@ -347,7 +408,8 @@ module CPU(
         .address(alu_result_m),
         .read_data(read_data_m),
         .write_enable(mem_write_m),
-        .write_data(write_data_m)
+        .write_data(write_data_m),
+        .write_mask(write_mask)
     );
     
     always_ff @(posedge clk) begin
@@ -359,6 +421,10 @@ module CPU(
 
             reg_write_w <= 0;
             result_src_w <= 0;
+
+            funct3_w <= 0;
+            imm_ext_w <= 0;
+            pc_target_w <= 0;
         end else begin
             alu_result_w <= alu_result_m;
             read_data_w <= read_data_m;
@@ -367,6 +433,11 @@ module CPU(
 
             reg_write_w <=  reg_write_m;
             result_src_w <= result_src_m;
+
+            funct3_w <= funct3_m;
+
+            imm_ext_w <= imm_ext_m;
+            pc_target_w <= pc_target_m;
         end
     end
     
@@ -387,7 +458,6 @@ module CPU(
         .stall_d(stall_d),
         .flush_d(flush_d),
         .flush_e(flush_e),
-        .forward_rd2_d(forward_rd2_d),
         .forward_a_e(forward_a_e),
         .forward_b_e(forward_b_e)
     );

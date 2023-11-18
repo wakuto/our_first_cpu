@@ -17,6 +17,9 @@ run: cpu program.bin
 test: cpu test.bin
 	vvp cpu
 
+verilator:
+	verilator --binary -j $(MODULES)
+
 clean:
 	rm -rf cpu cpu.vcd
 

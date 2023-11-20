@@ -4,7 +4,7 @@ module Top(
     input  wire rst
 );
     logic [31: 0] pc;
-    logic [31: 0] instr;
+    logic [31: 0] instruction;
 
     logic [31: 0] address;
     logic [31: 0] write_data;
@@ -23,7 +23,7 @@ module Top(
         .read_data(read_data),
 
         .pc(pc),
-        .instr(instr)
+        .instruction(instruction)
     );
     
     DMemory data_memory(
@@ -36,7 +36,7 @@ module Top(
     );
     IMemory instruction_memory(
         .pc(pc),
-        .instr(instr)
+        .instr(instruction)
     );
 endmodule
 `default_nettype wire

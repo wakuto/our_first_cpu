@@ -1,3 +1,5 @@
+`default_nettype none
+
 module Core(
     input   wire    clk,
     input   wire    rst,
@@ -9,7 +11,7 @@ module Core(
     input logic [31: 0]    read_data,
 
     output  wire [31:0]   pc,
-    input logic [31:0]  instr
+    input logic [31:0]  instruction
 );
     logic   [31: 0] pc_f;
     logic   [31: 0] instr_f;
@@ -274,7 +276,7 @@ module Core(
     assign write_enable = mem_write_m;
     assign write_data = write_data_m;
     assign pc = pc_f;
-    assign instr_f = instr;
+    assign instr_f = instruction;
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin
@@ -458,3 +460,4 @@ module Core(
         .forward_b_e(forward_b_e)
     );
 endmodule
+`default_nettype wire

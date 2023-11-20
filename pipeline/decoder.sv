@@ -32,6 +32,7 @@ always_comb begin
             alu_op     = 2'b0;
             branch     = 1'b0;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
         // sw,sb,sh(S-形式)
         7'b0100011 : begin
@@ -43,6 +44,7 @@ always_comb begin
             alu_op     = 2'b00;
             branch     = 1'b0;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
         // R-形式
         7'b0110011 : begin
@@ -54,6 +56,7 @@ always_comb begin
             alu_op     = 2'b10;
             branch     = 1'b0;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
         // B-形式
         7'b1100011 : begin
@@ -77,6 +80,7 @@ always_comb begin
             alu_op     = 2'b10;
             branch     = 1'b0;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
         // jal
         7'b1101111 : begin
@@ -135,6 +139,7 @@ always_comb begin
             alu_op     = 0;
             branch     = 1'b0;
             jump       = 1'b0;
+            pc_alu_src = 1'b0;
         end
     endcase
 end

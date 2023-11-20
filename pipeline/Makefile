@@ -1,4 +1,4 @@
-MODULES = alu.sv cpu.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv
+MODULES = alu.sv top.sv core.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv
 
 all: cpu
 
@@ -18,7 +18,7 @@ test: cpu test.bin
 	vvp cpu
 
 verilator:
-	verilator --binary -j $(MODULES)
+	verilator --lint-only -Wall --timing $(MODULES)
 
 clean:
 	rm -rf cpu cpu.vcd

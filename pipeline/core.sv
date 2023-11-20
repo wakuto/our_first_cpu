@@ -1,8 +1,15 @@
-`default_nettype none
-
-module CPU(
+module Core(
     input   wire    clk,
-    input   wire    rst
+    input   wire    rst,
+
+    output  wire [31: 0]     address,
+    output  wire [31: 0]     write_data,
+    output  wire             write_enable,
+    output  logic  [3:0]      write_mask,
+    input logic [31: 0]    read_data,
+
+    output  wire [31:0]   pc,
+    input logic [31:0]  instr
 );
     logic   [31: 0] pc_f;
     logic   [31: 0] instr_f;
@@ -119,11 +126,6 @@ module CPU(
     logic  [1:0]    forward_a_e;
     logic  [1:0]    forward_b_e;
 
-    IMemory instruction_memory(
-        .pc(pc_f),
-        .instr(instr_f)
-    );
-
     assign pc_plus_4_f = pc_f + 4;
     assign pc_src_e = jump_e | branch_result_e;
 
@@ -193,7 +195,6 @@ module CPU(
         .imm_src(imm_src_d),
 
         .pc_alu_src(pc_alu_src_d)
-
     );
     always_comb begin
         case(result_src_w)
@@ -267,6 +268,13 @@ module CPU(
             default : pc_alu_src_a = 32'hBAD0002;
         endcase
     end
+
+    assign address = alu_result_m;
+    assign read_data_m = read_data;
+    assign write_enable = mem_write_m;
+    assign write_data = write_data_m;
+    assign pc = pc_f;
+    assign instr_f = instr;
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin
@@ -392,8 +400,6 @@ module CPU(
 
         end
     end
-
-    logic [3:0] write_mask;
     always_comb begin
         case(funct3_m)
             3'b000: write_mask = 4'b0001;
@@ -401,17 +407,7 @@ module CPU(
             3'b010: write_mask = 4'b1111;
             default:write_mask = 4'b1111;
         endcase
-    end
-
-    DMemory data_memory(
-        .clk(clk),
-        .address(alu_result_m),
-        .read_data(read_data_m),
-        .write_enable(mem_write_m),
-        .write_data(write_data_m),
-        .write_mask(write_mask)
-    );
-    
+    end  
     always_ff @(posedge clk) begin
         if (rst) begin
             alu_result_w <= 0;
@@ -462,4 +458,3 @@ module CPU(
         .forward_b_e(forward_b_e)
     );
 endmodule
-`default_nettype wire

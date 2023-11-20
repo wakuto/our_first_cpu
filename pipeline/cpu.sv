@@ -129,8 +129,8 @@ module CPU(
 
     always_comb begin
         case(pc_src_e)
-            2'b00:   pc_next   = pc_plus_4_f;
-            2'b01:   pc_next   = pc_target_e;
+            1'b0:   pc_next   = pc_plus_4_f;
+            1'b1:   pc_next   = pc_target_e;
             // 2'b10:   pc_next   = alu_result;
             default: pc_next = 32'hdeadbeef;
         endcase
@@ -199,11 +199,11 @@ module CPU(
         case(result_src_w)
             3'b001: begin
                 case(funct3_w)
-                    3'b000:  wd3_w = $signed(result_w[7:0]);
-                    3'b001:  wd3_w = $signed(result_w[15:0]);
+                    3'b000:  wd3_w = 32'($signed(result_w[7:0]));
+                    3'b001:  wd3_w = 32'($signed(result_w[15:0]));
                     3'b010:  wd3_w = result_w;
-                    3'b100:  wd3_w = $unsigned(result_w[7:0]);
-                    3'b101:  wd3_w = $unsigned(result_w[15:0]);
+                    3'b100:  wd3_w = 32'($unsigned(result_w[7:0]));
+                    3'b101:  wd3_w = 32'($unsigned(result_w[15:0]));
                     default: wd3_w = result_w;
                 endcase
             end

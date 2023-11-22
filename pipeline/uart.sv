@@ -1,11 +1,17 @@
 `default_nettype none
 
-module Uart #(parameter BAUD_RATE = 10) (
+module Uart(
     input logic clk,
     input logic rst,
     input bit start,
     input logic [7:0] data,
-    output logic tx
+    input logic [31:0] baud_rate,
+    input logic [31:0] clk_frequency,
+    input logic rx,
+
+    output logic tx,
+    output logic busy,
+    output logic read_ready
 ); 
     // baud_clk生成
     logic [15:0] baud_counter = 16'b0;
@@ -15,7 +21,7 @@ module Uart #(parameter BAUD_RATE = 10) (
             baud_counter <= 16'b0;
             baud_clk <= 16'b0;
         end else begin
-            if (baud_counter == BAUD_RATE) begin
+            if (baud_counter == (clk_frequency/baud_rate-1)) begin
                 baud_counter <= 16'b0;
                 baud_clk <= ~baud_clk;
             end else begin
@@ -68,6 +74,10 @@ module Uart #(parameter BAUD_RATE = 10) (
             STOP_BIT: tx = 1;
             default: tx = 1;
         endcase
+    end
+    // busy出力
+    always_comb begin
+        busy = (state != IDLE);
     end
 endmodule
 `default_nettype wire

@@ -1,7 +1,9 @@
 `default_nettype none
 module Top(   
     input  wire clk,
-    input  wire rst
+    input  wire rst,
+
+    input [7:0] uart_in
 );
     logic [31: 0] pc;
     logic [31: 0] instruction;
@@ -11,6 +13,7 @@ module Top(
     logic [ 3: 0] write_mask;
     logic         write_enable;
     logic [31: 0] read_data;
+    logic         tx;
 
     Core core(
         .clk(clk),
@@ -37,6 +40,14 @@ module Top(
     IMemory instruction_memory(
         .pc(pc),
         .instr(instruction)
+    );
+
+    Uart uart(
+        .clk(clk),
+        .rst(rst),
+        .start(1'b1),
+        .data(uart_in),
+        .tx(tx)
     );
 endmodule
 `default_nettype wire

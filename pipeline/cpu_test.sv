@@ -4,7 +4,7 @@ module cpu_test();
     logic clk;
     logic rst;
     
-    Top top(.clk(clk), .rst(rst));
+    Top top(.clk(clk), .rst(rst), .uart_in(8'b10111001));
 
     initial begin
         $dumpfile("cpu.vcd");

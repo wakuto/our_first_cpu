@@ -12,6 +12,9 @@ module Top(
     logic         write_enable;
     logic [31: 0] read_data;
 
+    // Instruction Memory
+    logic         valid;
+
     Core core(
         .clk(clk),
         .rst(rst),
@@ -23,7 +26,8 @@ module Top(
         .read_data(read_data),
 
         .pc(pc),
-        .instruction(instruction)
+        .instruction(instruction),
+        .valid(valid)
     );
     
     DMemory data_memory(
@@ -35,8 +39,12 @@ module Top(
         .write_mask(write_mask)
     );
     IMemory instruction_memory(
+        .clk(clk),
         .pc(pc),
-        .instr(instruction)
+        .rst(rst),
+
+        .instr(instruction),
+        .valid(valid)
     );
 endmodule
 `default_nettype wire

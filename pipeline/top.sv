@@ -25,13 +25,14 @@ module Top(
     logic read_ready;
     logic uart_write_enable;
 
-    // uart_memoryのマルチプレクサ
+    // uartの各パラメータを設定
     always_comb begin
         uart_write_enable = address == uart_rw && write_enable;
         if(uart_write_enable) uart_memory[0] = write_data[7:0];
         uart_memory[5] = {1'b0,busy, 4'b0, read_ready};
     end
 
+    // clk_frequencyの設定(coreを通してソフトウェアから後で書き換えられるようにしている)
     always_ff @(posedge clk) begin
          if (rst) begin
             clk_frequency <= 32'hffc0;
@@ -46,7 +47,7 @@ module Top(
         case(address)
             uart_rw: read_data = uart_memory[0]; //受信時ならば、uart[0]には受信データが入っている
             uart_status: read_data = uart_memory[5]; //uart[5]には、busyとread_readyが入っている
-            default: read_data = dmemory_read_data;
+            default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
     end
 

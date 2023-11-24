@@ -17,7 +17,7 @@ module Uart(
     logic [15:0] baud_counter = 16'b0;
     logic baud_clk = 1'b0;
 
-    bit [4:0] count;  // 9からカウントダウン
+    bit [4:0] count;  // 10からカウントダウン
     bit [9:0] tx_data;  // 送信データ
 
     always_ff @(posedge clk) begin
@@ -33,8 +33,9 @@ module Uart(
                 baud_counter <= 16'b0;
                 baud_clk <= ~baud_clk;
 
-                // カウントアップ
+                // カウントダウン
                 count <= (count == 0) ? 0 : count - 1;
+                // 算術右シフトし、最下位位ビットをtxに代入
                 tx_data <= $signed(tx_data) >>> 1;
                 tx = tx_data[0];
             end else begin
@@ -45,7 +46,7 @@ module Uart(
                 busy <= 1'b0;
             end
         end
-        // 送信データをdataに読み込む
+        // 送信データをdataに読み込む(この処理のみ、clkの立ち上がりで行う)
         if (write_enable && busy == 0) begin
             tx_data <= {1'b1,data,1'b0};
             count <= 4'd10;

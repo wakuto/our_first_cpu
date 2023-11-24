@@ -13,6 +13,10 @@ module Top(
     logic [31: 0] read_data;
     logic [31: 0] dmemory_read_data;
     logic         tx;
+    logic [ 7: 0] rx_data;
+    logic         outValid;
+    logic         rx; 
+
 
     logic [7:0] uart_memory[0:7];
     logic [31:0] clk_frequency;
@@ -29,6 +33,8 @@ module Top(
     always_comb begin
         uart_write_enable = address == uart_rw && write_enable;
         if(uart_write_enable) uart_memory[0] = write_data[7:0];
+        else if(outValid) uart_memory[0] = rx_data;
+
         uart_memory[5] = {1'b0,busy, 4'b0, read_ready};
     end
 
@@ -87,7 +93,35 @@ module Top(
         .read_ready(read_ready),
         .baud_rate(11520),
         .clk_frequency(clk_frequency),
-        .write_enable(uart_write_enable)
+        .write_enable(uart_write_enable),
+        .rx(rx),
+        .rx_data(rx_data),
+        .outValid(outValid)
     );
+
+    logic       dummy_tx;
+    logic       dummy_busy;
+    logic dummy_read_ready;
+    logic [7:0] dummy_rx_data;
+    logic dummy_outValid;
+    logic [7:0] dummy_uart;
+    always_comb begin
+      if(dummy_outValid) dummy_uart = dummy_rx_data;
+    end
+    Uart uart_rx(
+        .clk(clk),
+        .rst(rst),
+        .data(uart_memory[0]),
+        .tx(dummy_tx),
+        .busy(dummy_busy),
+        .read_ready(dummy_read_ready),
+        .baud_rate(11520),
+        .clk_frequency(clk_frequency),
+        .write_enable(0),
+        .rx(tx),
+        .rx_data(dummy_rx_data),
+        .outValid(dummy_outValid)
+    );
+
 endmodule
 `default_nettype wire

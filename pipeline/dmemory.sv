@@ -27,11 +27,7 @@ end
 // 10000000
 // dmemory
 always_comb begin
-    if (address < 32'd32) begin
-        read_data = 32'h1 << address;
-    end else begin
-        read_data = {dmemory[address+3],dmemory[address+2],dmemory[address+1],dmemory[address]};
-    end
+    read_data = {dmemory[address+3],dmemory[address+2],dmemory[address+1],dmemory[address]};
 end
 
 endmodule

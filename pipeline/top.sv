@@ -23,14 +23,15 @@ module Top(
 
     logic busy;
     logic read_ready;
+    logic uart_write_enable;
 
     // uart_memoryのマルチプレクサ
     always_comb begin
-        if(address == uart_rw && write_enable) uart_memory[0] = write_data[7:0];
+        uart_write_enable = address == uart_rw && write_enable;
+        if(uart_write_enable) uart_memory[0] = write_data[7:0];
         uart_memory[5] = {1'b0,busy, 4'b0, read_ready};
     end
 
-    // assign clk_frequency = (address == clk_frequency_address) ? write_data : clk_frequency;
     always_ff @(posedge clk) begin
          if (rst) begin
             clk_frequency <= 32'hffc0;
@@ -85,7 +86,7 @@ module Top(
         .read_ready(read_ready),
         .baud_rate(11520),
         .clk_frequency(clk_frequency),
-        .write_enable(write_enable)
+        .write_enable(uart_write_enable)
     );
 endmodule
 `default_nettype wire

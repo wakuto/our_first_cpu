@@ -59,9 +59,11 @@ module Uart(
                     rx_counter <= rx_counter - 1;
                     // 算術右シフトし、rx_dataの最上位ビットにrxを代入
                     rx_data <= $signed({rx,rx_data}) >>> 1;
+                    // ストップビットが立つ直前で、outValidを1にする
                     if(rx_counter == 1 && !read_ready) begin
                         outValid <= 1'b1;
                     end
+                    // ストップビットが立ったら、read_readyを1にし、outValidを0にして出力を無効化する
                     if(rx_counter == 0 && !read_ready) begin
                         read_ready <= 1'b1;
                         outValid <= 1'b0;

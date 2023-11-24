@@ -99,11 +99,13 @@ module Top(
         .outValid(outValid)
     );
 
+    // UARTのoutput信号を全てdummyに接続する
     logic       dummy_tx;
     logic       dummy_busy;
     logic dummy_read_ready;
     logic [7:0] dummy_rx_data;
     logic dummy_outValid;
+    // 受信したデータを保持するレジスタ
     logic [7:0] dummy_uart;
     always_comb begin
       if(dummy_outValid) dummy_uart = dummy_rx_data;
@@ -117,6 +119,7 @@ module Top(
         .read_ready(dummy_read_ready),
         .baud_rate(11520),
         .clk_frequency(clk_frequency),
+        //txを行わないようにする
         .write_enable(0),
         .rx(tx),
         .rx_data(dummy_rx_data),

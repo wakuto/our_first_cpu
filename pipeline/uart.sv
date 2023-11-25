@@ -35,7 +35,7 @@ module Uart(
 
             read_ready <= 1'b1;
             outValid <= 1'b0;
-            rx_counter <= 0;
+            rx_counter <= '1;
             rx_data <= '1;
         end else begin
             if (baud_counter == (clk_frequency/baud_rate-1)) begin
@@ -78,11 +78,10 @@ module Uart(
                 busy <= 1'b0;
             end
             // 送信データをdataに読み込む(この処理のみ、clkの立ち上がりで行う)
-            if (write_enable && !busy && read_ready) begin
+            if (write_enable && !busy) begin
                 tx_data <= {1'b1,data,1'b0};
                 tx_counter <= 4'd10;
                 busy <= 1'b1;
-                read_ready <= 1'b0;
             end
         end
     end

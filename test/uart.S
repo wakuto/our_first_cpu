@@ -60,6 +60,7 @@ _start:
     nop
     addi t1, x0, 0x37
     sb t1, 0(x1)
+    lw s0, 0(x1)
 
 .end:
     beq x0, x0, .end

@@ -97,7 +97,8 @@ module Top(
         .baud_rate(11520),
         .clk_frequency(clk_frequency),
         .write_enable(uart_write_enable),
-        .rx(tx),
+        // 動作確認では、rxをtxに接続している
+        .rx(rx),
         .rx_data(rx_data),
         .outValid(outValid)
     );

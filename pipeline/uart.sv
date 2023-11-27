@@ -16,7 +16,7 @@ module Uart(
     output logic outValid
 ); 
     // baud_clk生成
-    logic [15:0] baud_counter = 16'b0;
+    logic [31:0] baud_counter = 32'b0;
     logic baud_clk = 1'b0;
 
     bit [4:0] tx_counter;  // 10からカウントダウン
@@ -26,8 +26,8 @@ module Uart(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            baud_counter <= 16'b0;
-            baud_clk <= 16'b0;
+            baud_counter <= 32'b0;
+            baud_clk <= 1'b0;
             tx_counter <= 0;
             tx_data <= '1;
             busy <= 1'b0;
@@ -39,7 +39,7 @@ module Uart(
             rx_data <= '1;
         end else begin
             if (baud_counter == (clk_frequency/baud_rate-1)) begin
-                baud_counter <= 16'b0;
+                baud_counter <= 32'b0;
                 baud_clk <= ~baud_clk;
 
                 //送信
@@ -52,7 +52,7 @@ module Uart(
                 //受信
                 //受信のスタートビットを検出
                 if(!rx && read_ready) begin
-                    rx_counter <= 4'd8;
+                    rx_counter <= 5'd8;
                     read_ready <= 1'b0;
                 end else begin
                     //カウントダウン
@@ -80,7 +80,7 @@ module Uart(
             // 送信データをdataに読み込む(この処理のみ、clkの立ち上がりで行う)
             if (write_enable && !busy) begin
                 tx_data <= {1'b1,data,1'b0};
-                tx_counter <= 4'd10;
+                tx_counter <= 5'd10;
                 busy <= 1'b1;
             end
         end

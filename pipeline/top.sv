@@ -33,17 +33,13 @@ module Top(
     always_comb begin
         uart_write_enable = address == uart_rw && write_enable;
         //uartの各パラメータを設定
-        if(uart_write_enable) tx_holding = write_data[7:0];
-        if(outValid) rx_holding = rx_data;
-        line_status = {1'b0,busy, 4'b0, read_ready};
+        tx_holding = write_data[7:0];
+        rx_holding = rx_data;
+        line_status = {1'b0,busy, 5'b0, read_ready};
     end
      always_ff @(posedge clk) begin
          if (rst) begin
             clk_frequency <= 32'hffc0;
-            uart_write_enable <= 1'b0;
-            tx_holding <= '1;
-            rx_holding <= '1;
-            line_status <= 8'b0;
         end
         else begin
             // clk_frequencyの設定(coreを通してソフトウェアから後で書き換えられるようにしている)
@@ -54,8 +50,8 @@ module Top(
     // read_dataのマルチプレクサ
     always_comb begin
         case(address)
-            uart_rw: read_data = rx_holding; //受信時ならば、rx_holdingを返す
-            uart_status: read_data = line_status; //uart[5]には、busyとread_readyが入っている
+            uart_rw: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
+            uart_status: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
     end
@@ -98,7 +94,7 @@ module Top(
         .clk_frequency(clk_frequency),
         .write_enable(uart_write_enable),
         // 動作確認では、rxをtxに接続している
-        .rx(rx),
+        .rx(tx),
         .rx_data(rx_data),
         .outValid(outValid)
     );

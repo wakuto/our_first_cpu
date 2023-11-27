@@ -19,6 +19,7 @@ initial begin
 end
 
 logic        is_first_clk;
+logic [31:0] pc_fetching;
 logic [31:0] pc_fetched;
 
 always_ff @(posedge clk) begin
@@ -29,12 +30,17 @@ always_ff @(posedge clk) begin
         is_first_clk <= 1'b0;
     end
 
-    pc_fetched <= pc;
+    pc_fetched <= pc_fetching;
     instr <= {mem[pc+3], mem[pc+2], mem[pc+1], mem[pc]};
 end
 
 always_comb begin
     valid = ~is_first_clk && (pc_fetched == pc);
+    if (!valid) begin
+        pc_fetching = pc;
+    end else begin
+        pc_fetching = pc + 4;
+    end
 end
 
 endmodule

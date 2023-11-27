@@ -8,11 +8,11 @@ module Core(
     output  wire  [31: 0]   write_data,
     output  wire            write_enable,
     output  logic [3:0]     write_mask,
-    input   logic [31: 0]   read_data,
+    input   wire  [31: 0]   read_data,
 
     output  wire  [31:0]    pc,
-    input   logic [31:0]    instruction,
-    input   logic           valid
+    input   wire  [31:0]    instruction,
+    input   wire            valid
 );
     logic   [31: 0] pc_f;
     logic   [31: 0] instr_f;

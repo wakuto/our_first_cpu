@@ -4,13 +4,13 @@ module Core(
     input   wire            clk,
     input   wire            rst,
 
-    output  wire [31: 0]     address,
-    output  wire [31: 0]     write_data,
-    output  wire             write_enable,
-    output  logic  [3:0]     write_mask,
-    output  logic            read_enable,
-    input   wire [31: 0]     read_data,
-
+    output  wire  [31: 0]   address,
+    output  wire  [31: 0]   write_data,
+    output  wire            write_enable,
+    output  logic [3:0]     write_mask,
+    input   wire  [31: 0]   read_data,
+    output  wire            read_enable,
+    input   wire            read_valid,
 
     output  wire  [31:0]    pc,
     input   wire  [31:0]    instruction,
@@ -102,6 +102,8 @@ module Core(
     logic   [31:0] imm_ext_m;
     logic [31:0] pc_target_m;
 
+    logic          read_enable_m;
+
     //Data Memory
     logic   [31: 0] read_data_m;
     logic   [31: 0] result_w;
@@ -115,6 +117,7 @@ module Core(
     logic           reg_write_w;
     logic   [2:0]   result_src_w;
 
+    logic          we3;
     logic   [31:0] wd3_w;
     logic   [2:0]  funct3_w;
 
@@ -125,6 +128,7 @@ module Core(
     // hazard signal
     logic           stall_f;
     logic           stall_d;
+    logic           stall_read;
     logic           flush_d;
     logic           flush_e;
     logic  [1:0]    forward_a_e;
@@ -214,6 +218,12 @@ module Core(
             end
             default: wd3_w = result_w;
         endcase
+
+        if (!stall_read) begin
+            we3 = reg_write_w;
+        end else begin
+            we3 = 0;
+        end
     end
     // for I-format
     Regfile reg_file(
@@ -227,7 +237,7 @@ module Core(
 
         .addr3(rd_w),
         .wd3(wd3_w),
-        .we3(reg_write_w)
+        .we3(we3)
     );
 
     /*
@@ -304,7 +314,7 @@ module Core(
             rs2_e <= 0;
 
             funct3_e <= 0;
-        end else begin
+        end else if (!stall_read) begin
             rd1_e <= rd1_d;
             rd2_e <= rd2_d;
             pc_e <= pc_d;
@@ -371,7 +381,7 @@ module Core(
             default : result_w = 32'hdeadbeef;
         endcase
     end
-    
+
     always_ff @(posedge clk) begin
         if (rst) begin
             alu_result_m <= 0;
@@ -387,7 +397,7 @@ module Core(
 
             imm_ext_m <= 0;
             pc_target_m <= 0;
-        end else begin
+        end else if (!stall_read) begin
             alu_result_m <= alu_result_e;
             write_data_m <= write_data_e;
             pc_plus_4_m <= pc_plus_4_e;
@@ -412,7 +422,16 @@ module Core(
             3'b010: write_mask = 4'b1111;
             default:write_mask = 4'b1111;
         endcase
-    end  
+
+        if (result_src_m == 3'b001) begin
+            read_enable_m = 1'b1;
+        end else begin
+            read_enable_m = 1'b0;
+        end
+    end
+
+    assign read_enable = read_enable_m;
+
     always_ff @(posedge clk) begin
         if (rst) begin
             alu_result_w <= 0;
@@ -441,7 +460,7 @@ module Core(
             pc_target_w <= pc_target_m;
         end
     end
-    
+
     Hazard hazard(
         .rs1_e(rs1_e),
         .rs2_e(rs2_e),
@@ -452,11 +471,14 @@ module Core(
         .pc_src_e(pc_src_e),
         .rd_m(rd_m),
         .reg_write_m(reg_write_m),
+        .read_enable(read_enable),
+        .read_valid(read_valid),
         .rd_w(rd_w),
         .reg_write_w(reg_write_w),
 
         .stall_f(stall_f),
         .stall_d(stall_d),
+        .stall_read(stall_read),
         .flush_d(flush_d),
         .flush_e(flush_e),
         .forward_a_e(forward_a_e),

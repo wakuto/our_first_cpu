@@ -12,6 +12,9 @@ module Top(
     logic [31: 0] write_data;
     logic [ 3: 0] write_mask;
     logic         write_enable;
+    wire  [31: 0] read_data;
+    wire          read_enable;
+    wire          read_valid;
 
     logic [31: 0] read_data;
     logic [31: 0] dmemory_read_data;
@@ -68,9 +71,11 @@ module Top(
         .address(address),
         .write_data(write_data),
         .write_enable(write_enable),
+        .read_enable(read_enable),
         .write_mask(write_mask),
 
         .read_data(read_data),
+        .read_valid(read_valid),
 
         .pc(pc),
         .instruction(instruction),
@@ -81,6 +86,10 @@ module Top(
     DMemory data_memory(
         .clk(clk),
         .address(address),
+        .read_enable(read_enable),
+        .read_data(read_data),
+        .read_valid(read_valid),
+        .write_enable(write_enable),
         .write_data(write_data),
         .write_enable(write_enable && address != uart_rw_address),
         .write_mask(write_mask),

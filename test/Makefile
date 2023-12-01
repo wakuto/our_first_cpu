@@ -1,4 +1,4 @@
-PREFIX=riscv64-elf-
+PREFIX=riscv32-unknown-elf-
 TARGET :=
 
 all: program.bin

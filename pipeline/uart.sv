@@ -48,7 +48,6 @@ module Uart(
                 // 算術右シフトし、最下位位ビットをtxに代入
                 tx_data <= $signed(tx_data) >>> 1;
                 tx <= tx_data[0];
-
                 //受信
                 //受信のスタートビットを検出
                 if(!rx && read_ready) begin
@@ -62,7 +61,6 @@ module Uart(
                     // ストップビットが立つ直前で、outValidを1にする
                     if(rx_counter == 1 && !read_ready) begin
                         outValid <= 1'b1;
-                        read_ready <= 1'b1;
                     end
                     // ストップビットが立ったら、read_readyを1にし、outValidを0にして出力を無効化する
                     if(rx_counter == 0) begin
@@ -73,6 +71,9 @@ module Uart(
 
             end else begin
                 baud_counter <= baud_counter + 1;
+                if(tx_counter == 5'd10) begin
+                    tx_data <= {1'b1,data,1'b0};
+                end
             end
             // 送信が終わったら、busyを0にする
             if (tx_counter == 0 && busy) begin
@@ -80,7 +81,6 @@ module Uart(
             end
             // 送信データをdataに読み込む(この処理のみ、clkの立ち上がりで行う)
             if (write_enable && !busy) begin
-                tx_data <= {1'b1,data,1'b0};
                 tx_counter <= 5'd10;
                 busy <= 1'b1;
             end

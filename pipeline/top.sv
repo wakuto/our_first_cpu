@@ -32,18 +32,18 @@ module Top(
     logic uart_write_enable;
     always_comb begin
         uart_write_enable = address == uart_rw && write_enable;
-        //uartの各パラメータを設定
         tx_holding = write_data[7:0];
-        rx_holding = rx_data;
         line_status = {1'b0,busy, 5'b0, read_ready};
     end
-     always_ff @(posedge clk) begin
-         if (rst) begin
+    always_ff @(posedge clk) begin
+        if (rst) begin
             clk_frequency <= 32'hffc0;
+            rx_holding <= 8'b0;
         end
         else begin
             // clk_frequencyの設定(coreを通してソフトウェアから後で書き換えられるようにしている)
             if (write_enable && address == clk_frequency_address) clk_frequency <= write_data;
+            if(outValid) rx_holding <= rx_data;
         end
     end    
 
@@ -74,7 +74,7 @@ module Top(
         .clk(clk),
         .address(address),
         .write_data(write_data),
-        .write_enable(write_enable),
+        .write_enable(write_enable && address != uart_rw),
         .write_mask(write_mask),
         .read_data(dmemory_read_data)
     );

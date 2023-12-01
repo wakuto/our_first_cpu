@@ -62,9 +62,10 @@ module Uart(
                     // ストップビットが立つ直前で、outValidを1にする
                     if(rx_counter == 1 && !read_ready) begin
                         outValid <= 1'b1;
+                        read_ready <= 1'b1;
                     end
                     // ストップビットが立ったら、read_readyを1にし、outValidを0にして出力を無効化する
-                    if(rx_counter == 0 && !read_ready) begin
+                    if(rx_counter == 0) begin
                         read_ready <= 1'b1;
                         outValid <= 1'b0;
                     end

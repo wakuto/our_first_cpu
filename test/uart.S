@@ -20,9 +20,8 @@ TX1:
     nop
     nop
     nop
-    nop
-    nop
-    nop
+    
+
 
 RX1:
     lw s0, 5(x1) # statusの読み出し
@@ -37,9 +36,6 @@ TX2:
     beq s0, t1, TX2 # busyフラグが立っていたら送信を待つ
     sb t2, 0(x1)
 
-    nop
-    nop
-    nop
     nop
     nop
     nop

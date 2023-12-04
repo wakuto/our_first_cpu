@@ -1,7 +1,7 @@
 PREFIX=riscv32-unknown-elf-
 TARGET :=
 
-all: program.bin
+all: test.bin
 
 program.bin: ${TARGET}.S link.ld
 	$(PREFIX)as ./${TARGET}.S -c -o ${TARGET}.o

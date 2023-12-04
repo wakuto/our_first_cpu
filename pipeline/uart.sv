@@ -1,13 +1,12 @@
 `default_nettype none
 
 module Uart(
-    input logic clk,
-    input logic rst,
-    input logic write_enable,
-    input logic [7:0] data,
-    input logic [31:0] baud_rate,
-    input logic [31:0] clk_frequency,
-    input logic rx,
+    input wire clk,
+    input wire rst,
+    input wire write_enable,
+    input wire [7:0] data,
+    input wire [15:0] baud_max,
+    input wire rx,
 
     output logic tx,
     output logic busy,
@@ -38,16 +37,24 @@ module Uart(
             rx_counter <= '1;
             rx_data <= '1;
         end else begin
-            if (baud_counter == (clk_frequency/baud_rate-1)) begin
+            if (baud_counter == baud_max-1) begin
                 baud_counter <= 32'b0;
                 baud_clk <= ~baud_clk;
-
                 //送信
                 // カウントダウン
                 tx_counter <= (tx_counter == 0) ? 0 : tx_counter - 1;
+                // 送信が終わったら、busyを0にする
+                if (tx_counter == 0 && busy) begin
+                    busy <= 1'b0;
+                end
                 // 算術右シフトし、最下位位ビットをtxに代入
-                tx_data <= $signed(tx_data) >>> 1;
+                if(tx_counter == 5'd10) begin
+                    tx_data <= {1'b1,data,1'b0};
+                end else begin
+                    tx_data <= $signed(tx_data) >>> 1;
+                end
                 tx <= tx_data[0];
+
                 //受信
                 //受信のスタートビットを検出
                 if(!rx && read_ready) begin
@@ -71,13 +78,6 @@ module Uart(
 
             end else begin
                 baud_counter <= baud_counter + 1;
-                if(tx_counter == 5'd10) begin
-                    tx_data <= {1'b1,data,1'b0};
-                end
-            end
-            // 送信が終わったら、busyを0にする
-            if (tx_counter == 0 && busy) begin
-                busy <= 1'b0;
             end
             // 送信データをdataに読み込む(この処理のみ、clkの立ち上がりで行う)
             if (write_enable && !busy) begin

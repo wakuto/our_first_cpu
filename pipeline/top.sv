@@ -18,14 +18,14 @@ module Top(
     logic         rx; 
 
 
-    logic [31: 0] clk_frequency;
+    logic [15: 0] baud_max;
     logic [ 7: 0] tx_holding;
     logic [ 7: 0] rx_holding;
     logic [ 7: 0] line_status;
 
     parameter uart_rw = 32'h10010000;
     parameter uart_status = 32'h10010005;
-    parameter clk_frequency_address = 32'h10010100;
+    parameter baud_max_address = 32'h10010100;
 
     logic busy;
     logic read_ready;
@@ -35,15 +35,15 @@ module Top(
     end
     always_ff @(posedge clk) begin
         if (rst) begin
-            clk_frequency <= 32'hffc0;
             tx_holding <= 8'b0;
             rx_holding <= 8'b0;
             line_status <= 8'b0;
+            baud_max <= 16'h3;
         end
         else begin
-            // clk_frequencyの設定(coreを通してソフトウェアから後で書き換えられるようにしている)
-            if (write_enable && address == clk_frequency_address) clk_frequency <= write_data;
-            if(write_enable) tx_holding <= write_data;
+            // baud_maxの設定(coreを通してソフトウェアから後で書き換えられるようにしている)
+            if (write_enable && address == baud_max_address) baud_max <= write_data[15:0];
+            if(write_enable) tx_holding <= write_data[7:0];
             if(outValid) rx_holding <= rx_data;
             line_status <= {1'b0,busy, 5'b0, read_ready};
         end
@@ -92,13 +92,12 @@ module Top(
         .tx(tx),
         .busy(busy),
         .read_ready(read_ready),
-        .baud_rate(11520),
-        .clk_frequency(clk_frequency),
         .write_enable(uart_write_enable),
         // 動作確認では、rxをtxに接続している
         .rx(tx),
         .rx_data(rx_data),
-        .outValid(outValid)
+        .outValid(outValid),
+        .baud_max(baud_max)
     );
 
 endmodule

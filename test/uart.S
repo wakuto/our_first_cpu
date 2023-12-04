@@ -10,19 +10,6 @@ TX1:
     beq s0, t1, TX1 # busyフラグが立っていたら送信を待つ
     sb t2, 0(x1) # busyフラグが立っていなかったらUARTにデータを送信
 
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    
-
-
 RX1:
     lw s0, 5(x1) # statusの読み出し
     and s0, s0, t1 # read_readyフラグを抽出
@@ -35,17 +22,6 @@ TX2:
     srl s0, s0, 6 # busyフラグを抽出
     beq s0, t1, TX2 # busyフラグが立っていたら送信を待つ
     sb t2, 0(x1)
-
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
-    nop
     
 RX2:
     lw s0, 5(x1) # statusの読み出し

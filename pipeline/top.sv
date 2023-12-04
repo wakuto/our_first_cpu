@@ -23,15 +23,16 @@ module Top(
     logic [ 7: 0] rx_holding;
     logic [ 7: 0] line_status;
 
-    parameter uart_rw = 32'h10010000;
-    parameter uart_status = 32'h10010005;
+    parameter uart_rw_address = 32'h10010000;
+    parameter uart_status_address = 32'h10010005;
     parameter baud_max_address = 32'h10010100;
 
     logic busy;
     logic read_ready;
     logic uart_write_enable;
+    logic read_enable;
     always_comb begin
-        uart_write_enable = address == uart_rw && write_enable;
+        uart_write_enable = address == uart_rw_address && write_enable;
     end
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -52,8 +53,8 @@ module Top(
     // read_dataのマルチプレクサ
     always_comb begin
         case(address)
-            uart_rw: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
-            uart_status: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
+            uart_rw_address: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
+            uart_status_address: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
     end
@@ -70,13 +71,14 @@ module Top(
         .read_data(read_data),
 
         .pc(pc),
-        .instruction(instruction)
+        .instruction(instruction),
+        .read_enable(read_enable)
     );
     DMemory data_memory(
         .clk(clk),
         .address(address),
         .write_data(write_data),
-        .write_enable(write_enable && address != uart_rw),
+        .write_enable(write_enable && address != uart_rw_address),
         .write_mask(write_mask),
         .read_data(dmemory_read_data)
     );
@@ -97,7 +99,8 @@ module Top(
         .rx(tx),
         .rx_data(rx_data),
         .outValid(outValid),
-        .baud_max(baud_max)
+        .baud_max(baud_max),
+        .negate_read_ready(read_enable && address == uart_rw_address)
     );
 
 endmodule

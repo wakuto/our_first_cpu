@@ -51,7 +51,7 @@ module Uart(
                     busy <= 1'b0;
                 end
                 // 算術右シフトし、最下位位ビットをtxに代入
-                if(tx_counter == 5'd10) begin
+                if(tx_counter == 5'd10 && busy) begin
                     tx_data <= {1'b1,data,1'b0};
                 end else begin
                     tx_data <= $signed(tx_data) >>> 1;
@@ -73,7 +73,7 @@ module Uart(
                         outValid <= 1'b1;
                     end
                     // ストップビットが立ったら、read_readyを1にし、outValidを0にして出力を無効化する
-                    if(rx_counter == 0) begin
+                    if(rx_counter == 0 && isRead) begin
                         isRead <= 1'b0;
                         outValid <= 1'b0;
                         read_ready <= 1'b1;

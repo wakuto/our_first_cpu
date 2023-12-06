@@ -31,7 +31,7 @@ always_ff @(posedge clk) begin
     end
 
     pc_fetched <= pc_fetching;
-    instr <= {mem[pc+3], mem[pc+2], mem[pc+1], mem[pc]};
+    instr <= {mem[pc_fetching+3], mem[pc_fetching+2], mem[pc_fetching+1], mem[pc_fetching]};
 end
 
 always_comb begin

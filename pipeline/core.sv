@@ -1,17 +1,18 @@
 `default_nettype none
 
 module Core(
-    input   wire    clk,
-    input   wire    rst,
+    input   wire            clk,
+    input   wire            rst,
 
-    output  wire [31: 0]     address,
-    output  wire [31: 0]     write_data,
-    output  wire             write_enable,
-    output  logic  [3:0]      write_mask,
-    input logic [31: 0]    read_data,
+    output  wire  [31: 0]   address,
+    output  wire  [31: 0]   write_data,
+    output  wire            write_enable,
+    output  logic [3:0]     write_mask,
+    input   wire  [31: 0]   read_data,
 
-    output  wire [31:0]   pc,
-    input logic [31:0]  instruction
+    output  wire  [31:0]    pc,
+    input   wire  [31:0]    instruction,
+    input   wire            valid
 );
     logic   [31: 0] pc_f;
     logic   [31: 0] instr_f;
@@ -99,7 +100,6 @@ module Core(
     logic   [31:0] imm_ext_m;
     logic [31:0] pc_target_m;
 
-
     //Data Memory
     logic   [31: 0] read_data_m;
     logic   [31: 0] result_w;
@@ -154,7 +154,7 @@ module Core(
             pc_f <= 0;
         end
         else begin
-            if (!stall_f) pc_f <= pc_next;
+            if (!stall_f && valid) pc_f <= pc_next;
         end
     end
 
@@ -165,7 +165,7 @@ module Core(
             pc_plus_4_d <= 0;
         end
         else begin
-            if (!stall_d) begin
+            if (!stall_d && valid) begin
                 instr_d <= instr_f;
                 pc_d <= pc_f;
                 pc_plus_4_d <= pc_plus_4_f;

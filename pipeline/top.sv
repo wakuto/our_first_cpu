@@ -1,10 +1,10 @@
 `default_nettype none
-module Top(   
+module Top(
     input  wire clk,
     input  wire rst
 );
     logic [31: 0] pc;
-    logic [31: 0] instruction;
+    wire  [31: 0] instruction;
 
     logic [31: 0] address;
     logic [31: 0] write_data;
@@ -16,6 +16,7 @@ module Top(
     logic [ 7: 0] rx_data;
     logic         outValid;
     logic         rx; 
+    wire          valid;
 
 
     logic [15: 0] baud_max;
@@ -72,7 +73,8 @@ module Top(
 
         .pc(pc),
         .instruction(instruction),
-        .read_enable(read_enable)
+        .read_enable(read_enable),
+        .valid(valid)
     );
     DMemory data_memory(
         .clk(clk),
@@ -83,8 +85,12 @@ module Top(
         .read_data(dmemory_read_data)
     );
     IMemory instruction_memory(
+        .clk(clk),
         .pc(pc),
-        .instr(instruction)
+        .rst(rst),
+
+        .instr(instruction),
+        .valid(valid)
     );
 
     Uart uart(

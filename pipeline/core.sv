@@ -81,18 +81,17 @@ module Core(
     logic   [31:0] srca_e;
     logic   [31:0] srcb_e;
     logic   [31: 0] write_data_e;
-    
+
     logic          pc_src_e;
     logic          zero_e;
     logic          branch_result_e;
-    
-    
+
     // EX/MEM register
     logic   [31:0] alu_result_m;
     logic   [31:0] write_data_m;
     logic   [31:0] pc_plus_4_m;
     logic   [4 :0] rd_m;
-    
+
     logic           reg_write_m;
     logic   [2:0]   result_src_m;
     logic           mem_write_m;
@@ -102,12 +101,10 @@ module Core(
     logic   [31:0] imm_ext_m;
     logic [31:0] pc_target_m;
 
-    logic          read_enable_m;
-
     //Data Memory
     logic   [31: 0] read_data_m;
     logic   [31: 0] result_w;
-    
+
     // MEM/WB register
     logic   [31:0] alu_result_w;
     logic   [31:0] read_data_w;
@@ -124,7 +121,6 @@ module Core(
     logic   [31:0] imm_ext_w;
     logic [31:0] pc_target_w;
 
-    
     // hazard signal
     logic           stall_f;
     logic           stall_d;
@@ -141,7 +137,6 @@ module Core(
         case(pc_src_e)
             1'b0:   pc_next   = pc_plus_4_f;
             1'b1:   pc_next   = pc_target_e;
-            // 2'b10:   pc_next   = alu_result;
             default: pc_next = 32'hdeadbeef;
         endcase
     end
@@ -266,7 +261,6 @@ module Core(
 
     assign imm_ext_d = extend(imm_src_d, instr_d);
 
-    // assign pc_target_e = pc_e + imm_ext_e;
     assign pc_target_e = pc_alu_src_a + imm_ext_e;
     always_comb begin
         case(pc_alu_src_e)
@@ -289,7 +283,7 @@ module Core(
     assign write_data = write_data_m;
     assign pc = pc_f;
     assign instr_f = instruction;
-    assign read_enable = result_src_m == 2'b1;
+    assign read_enable = result_src_m == 3'b1;
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin
@@ -370,7 +364,6 @@ module Core(
         .zero(zero_e)
     );
 
-    // assign result = result_src ? read_data : alu_result;
     always_comb begin
         case(result_src_w)
             3'b000 : result_w = alu_result_w;
@@ -423,14 +416,7 @@ module Core(
             default:write_mask = 4'b1111;
         endcase
 
-        if (result_src_m == 3'b001) begin
-            read_enable_m = 1'b1;
-        end else begin
-            read_enable_m = 1'b0;
-        end
     end
-
-    assign read_enable = read_enable_m;
 
     always_ff @(posedge clk) begin
         if (rst) begin

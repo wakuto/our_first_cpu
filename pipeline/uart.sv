@@ -14,9 +14,9 @@ module Uart(
     output logic read_ready,
     output logic [7:0] rx_data,
     output logic outValid
-); 
+);
     // baud_clk生成
-    logic [31:0] baud_counter = 32'b0;
+    logic [15:0] baud_counter;
     logic baud_clk = 1'b0;
     logic isRead;
 
@@ -27,7 +27,7 @@ module Uart(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            baud_counter <= 32'b0;
+            baud_counter <= 16'b0;
             baud_clk <= 1'b0;
             tx_counter <= 0;
             tx_data <= '1;
@@ -41,7 +41,7 @@ module Uart(
             rx_data <= '1;
         end else begin
             if (baud_counter == baud_max-1) begin
-                baud_counter <= 32'b0;
+                baud_counter <= 16'b0;
                 baud_clk <= ~baud_clk;
                 //送信
                 // カウントダウン
@@ -67,7 +67,7 @@ module Uart(
                     //カウントダウン
                     rx_counter <= rx_counter - 1;
                     // 算術右シフトし、rx_dataの最上位ビットにrxを代入
-                    rx_data <= $signed({rx,rx_data}) >>> 1;
+                    rx_data <= 8'($signed({rx,rx_data}) >>> 1);
                     // ストップビットが立つ直前で、outValidを1にする
                     if(rx_counter == 1 && isRead) begin
                         outValid <= 1'b1;

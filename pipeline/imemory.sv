@@ -12,10 +12,7 @@ module IMemory(
 logic [7:0] mem [0:4095];
 
 initial begin
-    int fd = $fopen("../test/test.bin", "rb");
-    int res = 1;
-    res = $fread(mem, fd, 0, 4096);
-    $fclose(fd);
+    $readmemh("../test/test.hex", mem);
 end
 
 logic        is_first_clk;

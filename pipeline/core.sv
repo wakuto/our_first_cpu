@@ -4,11 +4,13 @@ module Core(
     input   wire            clk,
     input   wire            rst,
 
-    output  wire  [31: 0]   address,
-    output  wire  [31: 0]   write_data,
-    output  wire            write_enable,
-    output  logic [3:0]     write_mask,
-    input   wire  [31: 0]   read_data,
+    output  wire [31: 0]     address,
+    output  wire [31: 0]     write_data,
+    output  wire             write_enable,
+    output  logic  [3:0]     write_mask,
+    output  logic            read_enable,
+    input   wire [31: 0]     read_data,
+
 
     output  wire  [31:0]    pc,
     input   wire  [31:0]    instruction,
@@ -277,6 +279,7 @@ module Core(
     assign write_data = write_data_m;
     assign pc = pc_f;
     assign instr_f = instruction;
+    assign read_enable = result_src_m == 2'b1;
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin

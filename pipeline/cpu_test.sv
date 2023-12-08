@@ -3,8 +3,10 @@
 module cpu_test();
     logic clk;
     logic rst;
+    logic tx;
     
-    Top top(.clk(clk), .rst(rst));
+    // 動作確認ではエコーバックを行う
+    Top top(.clk(clk), .rst(rst), .tx(tx), .rx(tx));
 
     initial begin
         $dumpfile("cpu.vcd");

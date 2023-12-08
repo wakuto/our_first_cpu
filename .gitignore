@@ -4,6 +4,7 @@ cpu
 # Binary files
 *.elf
 *.bin
+*.hex
 *.o
 
 # settingfs directory

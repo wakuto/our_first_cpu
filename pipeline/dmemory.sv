@@ -9,7 +9,7 @@ module DMemory (
     output logic [31: 0]    read_data
 );
 
-logic [7:0] dmemory [0:1023];
+logic [7:0] dmemory [0:4095];
 
 always_ff @(posedge clk) begin
     if(write_enable) begin

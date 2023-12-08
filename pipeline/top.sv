@@ -1,7 +1,9 @@
 `default_nettype none
 module Top(
     input  wire clk,
-    input  wire rst
+    input  wire rst,
+    output wire tx,
+    input wire rx
 );
     logic [31: 0] pc;
     wire  [31: 0] instruction;
@@ -13,10 +15,8 @@ module Top(
 
     logic [31: 0] read_data;
     logic [31: 0] dmemory_read_data;
-    logic         tx;
     logic [ 7: 0] rx_data;
     logic         outValid;
-    logic         rx; 
     wire          valid;
 
 
@@ -103,8 +103,7 @@ module Top(
         .busy(busy),
         .read_ready(read_ready),
         .write_enable(uart_write_enable),
-        // 動作確認では、rxをtxに接続している
-        .rx(tx),
+        .rx(rx),
         .rx_data(rx_data),
         .outValid(outValid),
         .baud_max(baud_max),

@@ -10,6 +10,7 @@ module Top(
     logic [31: 0] write_data;
     logic [ 3: 0] write_mask;
     logic         write_enable;
+
     logic [31: 0] read_data;
     logic [31: 0] dmemory_read_data;
     logic         tx;
@@ -76,6 +77,7 @@ module Top(
         .read_enable(read_enable),
         .valid(valid)
     );
+  
     DMemory data_memory(
         .clk(clk),
         .address(address),

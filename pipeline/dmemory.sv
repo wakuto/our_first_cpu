@@ -31,8 +31,6 @@ always_ff @(posedge clk) begin
 
     if (read_valid) begin
         read_data <= {dmemory[address+3],dmemory[address+2],dmemory[address+1],dmemory[address]};
-    end else begin
-        read_data <= read_data;
     end
 end
 

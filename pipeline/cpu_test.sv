@@ -53,7 +53,12 @@ module cpu_test();
         );
 
     logic [7:0] mem [0:4095];
+    string file;
     initial begin
+        if (!$value$plusargs("hex=%s", file)) begin
+            $display("Please specify a hex file.");
+            $finish;
+        end
         $dumpfile("cpu.vcd");
         $dumpvars(0);
         for (int i = 0; i < 32; i++) begin
@@ -65,7 +70,7 @@ module cpu_test();
             $dumpvars(0, top.CEN_imem[i]);
         end
         // 命令読み込み
-        $readmemh("../test/test.hex", mem);
+        $readmemh(file, mem);
         //　最初のサイクルではCENをhighにする
         clk = 0;
         rst = 1;

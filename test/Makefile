@@ -1,11 +1,20 @@
 PREFIX=riscv32-unknown-elf-
+TARGET :=
 TARGET_DIR := ./isa
 PATTERN := ^rv32ui-p-[a-z]+$
 
 FILES := $(shell find $(TARGET_DIR) -type f | sort -n | grep -E 'rv32ui-p-.+' | grep -v -e '\.dump$$' -e '\.hex$$' -e '\.bin$$')
 BIN_FILES := $(shell find $(TARGET_DIR) -type f | sort -n | grep -E 'rv32ui-p-.+\.bin')
 
-all: bin
+all: test.bin
+
+test.bin: ${TARGET}.S link.ld
+	$(PREFIX)as ./${TARGET}.S -c -o ${TARGET}.o
+	$(PREFIX)ld ./${TARGET}.o -Tlink.ld -o ./${TARGET}.elf
+	$(PREFIX)objcopy -O binary ./${TARGET}.elf ./test.bin
+
+test.hex: test.bin
+	od -t x1 -A n -w1 -v ./test.bin > ./test.hex
 
 bin: link.ld
 	@for name in $(FILES); do\

@@ -11,13 +11,19 @@ cpu: $(MODULES)
 program.hex:
 	make -C ../program program.hex
 
+test.hex:
+	make -C ../test test.hex
+
 make-hex:
 	make -C ../test hex
 
 run: cpu program.hex
 	vvp cpu
 
-test: cpu make-hex
+test: cpu test.hex
+	vvp cpu +hex=../test/test.hex
+
+riscv-test: cpu make-hex
 	rm -f ./result.log
 	touch ./result.log
 	@for name in $(HEX_FILES); do\
@@ -32,5 +38,5 @@ verilator:
 clean:
 	rm -rf cpu cpu.vcd
 
-.PHONY: all run make-hex test verilator clean
+.PHONY: all run make-hex riscv-test test verilator clean
 

@@ -271,7 +271,7 @@ module Core(
                 case(forward_a_e)
                     2'b00 : pc_alu_src_a = rd1_e;
                     2'b01 : pc_alu_src_a = result_w;
-                    2'b10 : pc_alu_src_a = alu_result_m;
+                    2'b10 : pc_alu_src_a = alu_result_m + result_w;
                     default : pc_alu_src_a = 32'hBAD0001;
                 endcase
             end

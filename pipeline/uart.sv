@@ -16,7 +16,7 @@ module Uart(
     output logic outValid
 ); 
     // baud_clk生成
-    logic [31:0] baud_counter = 32'b0;
+    logic [15:0] baud_counter;
     logic baud_clk = 1'b0;
     logic isRead;
 
@@ -27,7 +27,7 @@ module Uart(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            baud_counter <= 32'b0;
+            baud_counter <= 16'b0;
             baud_clk <= 1'b0;
             tx_counter <= 0;
             tx_data <= '1;
@@ -41,7 +41,7 @@ module Uart(
             rx_data <= '1;
         end else begin
             if (baud_counter == baud_max-1) begin
-                baud_counter <= 32'b0;
+                baud_counter <= 16'b0;
                 baud_clk <= ~baud_clk;
                 //送信
                 // カウントダウン
@@ -54,7 +54,7 @@ module Uart(
                 if(tx_counter == 5'd10 && busy) begin
                     tx_data <= {1'b1,data,1'b0};
                 end else begin
-                    tx_data <= $signed(tx_data) >>> 1;
+                    tx_data <= 8'($signed(tx_data) >>> 1);
                 end
                 tx <= tx_data[0];
 

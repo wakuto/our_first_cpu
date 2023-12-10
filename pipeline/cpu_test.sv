@@ -54,11 +54,13 @@ module cpu_test();
 
     logic [7:0] mem [0:4095];
     string file;
+    int f;
     initial begin
         if (!$value$plusargs("hex=%s", file)) begin
             $display("Please specify a hex file.");
             $finish;
         end
+
         $dumpfile("cpu.vcd");
         $dumpvars(0);
         for (int i = 0; i < 32; i++) begin
@@ -71,7 +73,7 @@ module cpu_test();
         end
         // 命令読み込み
         $readmemh(file, mem);
-        //　最初のサイクルではCENをhighにする
+        // 最初のサイクルではCENをhighにする
         clk = 0;
         rst = 1;
         for(int i=0; i<4; i++) CEN_imem_write[i] = 1;
@@ -97,6 +99,15 @@ module cpu_test();
         rst = 0;
         @(posedge clk)
         #1000000
+
+        // テスト結果の出力設定
+        f = $fopen("result.log", "a");
+        if (top.core.reg_file.regfile[3] == 1) begin
+            $fdisplay(f, "[     OK     ]   %s", file);
+        end else begin
+            $fdisplay(f, "[FAILED (%3d)]   %s", int'(top.core.reg_file.regfile[3]), file);
+        end
+        $fclose(f);
         $finish;
     end
     always #(500) begin

@@ -9,3 +9,6 @@ cpu
 
 # settingfs directory
 .vscode
+
+# log
+*.log

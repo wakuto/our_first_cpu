@@ -18,9 +18,13 @@ run: cpu program.hex
 	vvp cpu
 
 test: cpu make-hex
+	rm -f ./result.log
+	touch ./result.log
 	@for name in $(HEX_FILES); do\
 		vvp cpu +hex=$$name;\
 	done
+
+	cat ./result.log
 
 verilator:
 	verilator --lint-only -Wall --timing $(MODULES)

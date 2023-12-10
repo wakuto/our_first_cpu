@@ -10,11 +10,14 @@ module Hazard (
     input wire [2:0]  result_src_e,
     input wire [4:0]  rd_m,
     input wire        reg_write_m,
+    input wire        read_enable,
+    input wire        read_valid,
     input wire [4:0]  rd_w,
     input wire        reg_write_w,
 
     output logic      stall_f,
     output logic      stall_d,
+    output logic      stall_read,
     output logic      flush_d,
     output logic      flush_e,
     output logic [1:0]forward_a_e,
@@ -42,6 +45,7 @@ always_comb begin
     lwstall = result_src_e[0] & ((rs1_d == rd_e) | (rs2_d == rd_e));
     stall_f = lwstall;
     stall_d = lwstall;
+    stall_read = read_enable & !read_valid;
     flush_d = pc_src_e;
     flush_e = lwstall | pc_src_e;
 end

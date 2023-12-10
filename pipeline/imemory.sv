@@ -6,13 +6,25 @@ module IMemory(
     input  wire          rst,
 
     output logic [31:0]  instr,
-    output logic         valid
+    output logic         valid,
+
+    output logic CEN [0:3],
+    output logic GWEN [0:3],
+    output logic [7:0] WEN [0:3],
+    output logic [8:0] A [0:3],
+    output logic [7:0] D [0:3],
+    input  wire  [7:0] Q [0:3]
 );
 
-logic [7:0] mem [0:4095];
-
-initial begin
-    $readmemh("../test/test.hex", mem);
+always_comb begin
+    for(int i=0;i<4;i++) begin
+        CEN[i] = rst;
+        GWEN[i] = 1;
+        WEN[i]  = {8{1'b1}};
+        A[i] = 9'((pc_fetching + i) >> 2);
+        D[i] = 8'b0;
+    end
+    instr = {Q[3], Q[2], Q[1], Q[0]};
 end
 
 logic        is_first_clk;
@@ -28,7 +40,6 @@ always_ff @(posedge clk) begin
     end
 
     pc_fetched <= pc_fetching;
-    instr <= {mem[pc_fetching+3], mem[pc_fetching+2], mem[pc_fetching+1], mem[pc_fetching]};
 end
 
 always_comb begin

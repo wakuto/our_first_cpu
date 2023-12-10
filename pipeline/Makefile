@@ -1,4 +1,4 @@
-MODULES = alu.sv top.sv core.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv uart.sv
+MODULES = alu.sv top.sv core.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv uart.sv gf180mcu_fd_ip_sram__sram512x8m8wm1.sv
 
 all: cpu
 

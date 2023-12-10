@@ -8,9 +8,9 @@ module Core(
     output  wire [31: 0]     write_data,
     output  wire             write_enable,
     output  logic  [3:0]     write_mask,
-    output  logic            read_enable,
     input   wire [31: 0]     read_data,
-
+    output  wire             read_enable,
+    input   wire             read_valid,
 
     output  wire  [31:0]    pc,
     input   wire  [31:0]    instruction,
@@ -76,6 +76,8 @@ module Core(
 
     logic   [4: 0] rs1_e, rs2_e;
 
+    logic [31:0] instr_e;
+
     //ALU
     logic   [31:0] alu_result_e;
     logic   [31:0] srca_e;
@@ -102,6 +104,8 @@ module Core(
     logic   [31:0] imm_ext_m;
     logic [31:0] pc_target_m;
 
+    logic [31:0] instr_m;
+
     //Data Memory
     logic   [31: 0] read_data_m;
     logic   [31: 0] result_w;
@@ -121,10 +125,13 @@ module Core(
     logic   [31:0] imm_ext_w;
     logic [31:0] pc_target_w;
 
+    logic [31:0] instr_w;
+
     
     // hazard signal
     logic           stall_f;
     logic           stall_d;
+    logic           stall_read;
     logic           flush_d;
     logic           flush_e;
     logic  [1:0]    forward_a_e;
@@ -137,7 +144,6 @@ module Core(
         case(pc_src_e)
             1'b0:   pc_next   = pc_plus_4_f;
             1'b1:   pc_next   = pc_target_e;
-            // 2'b10:   pc_next   = alu_result;
             default: pc_next = 32'hdeadbeef;
         endcase
     end
@@ -156,7 +162,7 @@ module Core(
             pc_f <= 0;
         end
         else begin
-            if (!stall_f && valid) pc_f <= pc_next;
+            if (!stall_f && valid && !stall_read) pc_f <= pc_next;
         end
     end
 
@@ -167,7 +173,7 @@ module Core(
             pc_plus_4_d <= 0;
         end
         else begin
-            if (!stall_d && valid) begin
+            if (!stall_d && valid && !stall_read) begin
                 instr_d <= instr_f;
                 pc_d <= pc_f;
                 pc_plus_4_d <= pc_plus_4_f;
@@ -279,7 +285,7 @@ module Core(
     assign write_data = write_data_m;
     assign pc = pc_f;
     assign instr_f = instruction;
-    assign read_enable = result_src_m == 2'b1;
+    assign read_enable = result_src_m == 3'b1;
 
     // write to ID/EX registers
     always_ff @(posedge clk) begin
@@ -304,7 +310,9 @@ module Core(
             rs2_e <= 0;
 
             funct3_e <= 0;
-        end else begin
+
+            instr_e <= 0;
+        end else if (!stall_read) begin
             rd1_e <= rd1_d;
             rd2_e <= rd2_d;
             pc_e <= pc_d;
@@ -325,6 +333,9 @@ module Core(
             rs2_e <= rs2_d;
 
             funct3_e <= funct3_d;
+
+            instr_e <= instr_d;
+
         end
     end
 
@@ -387,7 +398,9 @@ module Core(
 
             imm_ext_m <= 0;
             pc_target_m <= 0;
-        end else begin
+
+            instr_m <= 0;
+        end else if (!stall_read) begin
             alu_result_m <= alu_result_e;
             write_data_m <= write_data_e;
             pc_plus_4_m <= pc_plus_4_e;
@@ -403,6 +416,7 @@ module Core(
             imm_ext_m <= imm_ext_e;
             pc_target_m <= pc_target_e;
 
+            instr_m <= instr_e;
         end
     end
     always_comb begin
@@ -426,19 +440,25 @@ module Core(
             funct3_w <= 0;
             imm_ext_w <= 0;
             pc_target_w <= 0;
+            instr_w <= 0;
         end else begin
             alu_result_w <= alu_result_m;
             read_data_w <= read_data_m;
             pc_plus_4_w <= pc_plus_4_m;
             rd_w <= rd_m;
-
-            reg_write_w <=  reg_write_m;
+            if (!stall_read) begin
+                reg_write_w <= reg_write_m;
+            end else begin
+                reg_write_w <= 0;
+            end
             result_src_w <= result_src_m;
 
             funct3_w <= funct3_m;
 
             imm_ext_w <= imm_ext_m;
             pc_target_w <= pc_target_m;
+
+            instr_w <= instr_m;
         end
     end
     
@@ -452,11 +472,14 @@ module Core(
         .pc_src_e(pc_src_e),
         .rd_m(rd_m),
         .reg_write_m(reg_write_m),
+        .read_enable(read_enable),
+        .read_valid(read_valid),
         .rd_w(rd_w),
         .reg_write_w(reg_write_w),
 
         .stall_f(stall_f),
         .stall_d(stall_d),
+        .stall_read(stall_read),
         .flush_d(flush_d),
         .flush_e(flush_e),
         .forward_a_e(forward_a_e),

@@ -15,8 +15,7 @@ dump:
 	$(PREFIX)objdump -M numeric -M no-aliases -D ./${TARGET}.elf | less
 
 clean:
-	rm -rf *.elf *.o *.bin
+	rm -rf *.elf *.o *.bin *.hex
 
 # test.hex, test.bin は毎回実行
 .PHONY: all clean dump test.hex test.bin
-

@@ -23,5 +23,5 @@ verilator:
 clean:
 	rm -rf cpu cpu.vcd
 
-.PHONY: all run clean
+.PHONY: all run test verilator clean
 

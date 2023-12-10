@@ -32,23 +32,23 @@ module cpu_test();
     logic [7:0] WEN_imem_write [0:3];
     logic [8:0] A_imem_write [0:3];
     logic [7:0] D_imem_write [0:3];
-    
+
     Top top(
         .clk(clk),
         .rst(rst),
-        .tx(tx), 
-        .rx(tx), 
-        .CEN_dmem(CEN_dmem), 
-        .GWEN_dmem(GWEN_dmem), 
-        .WEN_dmem(WEN_dmem), 
-        .A_dmem(A_dmem), 
-        .D_dmem(D_dmem), 
+        .tx(tx),
+        .rx(tx),
+        .CEN_dmem(CEN_dmem),
+        .GWEN_dmem(GWEN_dmem),
+        .WEN_dmem(WEN_dmem),
+        .A_dmem(A_dmem),
+        .D_dmem(D_dmem),
         .Q_dmem(Q_dmem),
-        .CEN_imem(CEN_imem_read), 
-        .GWEN_imem(GWEN_imem_read), 
-        .WEN_imem(WEN_imem_read), 
-        .A_imem(A_imem_read), 
-        .D_imem(D_imem_read), 
+        .CEN_imem(CEN_imem_read),
+        .GWEN_imem(GWEN_imem_read),
+        .WEN_imem(WEN_imem_read),
+        .A_imem(A_imem_read),
+        .D_imem(D_imem_read),
         .Q_imem(Q_imem)
         );
 
@@ -57,12 +57,12 @@ module cpu_test();
         $dumpfile("cpu.vcd");
         $dumpvars(0);
         for (int i = 0; i < 32; i++) begin
-          $dumpvars(0, top.core.reg_file.regfile[i]);
+            $dumpvars(0, top.core.reg_file.regfile[i]);
         end
         for (int i = 0; i < 4; i++) begin
-          $dumpvars(0, top.instruction_memory.CEN[i]);
-          $dumpvars(0, CEN_imem_read[i]);
-          $dumpvars(0, top.CEN_imem[i]);
+            $dumpvars(0, top.instruction_memory.CEN[i]);
+            $dumpvars(0, CEN_imem_read[i]);
+            $dumpvars(0, top.CEN_imem[i]);
         end
         // 命令読み込み
         $readmemh("../test/test.hex", mem);
@@ -72,7 +72,7 @@ module cpu_test();
         for(int i=0; i<4; i++) CEN_imem_write[i] = 1;
         @(posedge clk)
         @(posedge clk)
-        for(int pc=0; pc < 100; pc++) begin
+        for(int pc=0; pc < 512; pc++) begin
             @(posedge clk)
             for(int i=0;i<4;i++) begin
                 CEN_imem_write[i] = 0;
@@ -80,7 +80,6 @@ module cpu_test();
                 WEN_imem_write[i]  = 8'b0;
                 A_imem_write[i] = pc;
                 D_imem_write[i] = mem[pc*4+i];
-                $display("pc: %d, instr: %h", pc, mem[pc*4+i]);
             end
         end
         rst = 0;
@@ -98,7 +97,7 @@ module cpu_test();
     always #(500) begin
         clk <= ~clk;
     end
-    
+
     always_comb begin
         for(int i=0;i<4;i++) begin
             CEN_imem[i] = rst ? CEN_imem_write[i] : CEN_imem_read[i];

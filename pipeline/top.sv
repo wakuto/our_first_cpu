@@ -21,7 +21,8 @@ module Top(
     input  wire  [7:0] Q_imem [0:3]
 );
     logic [31: 0] pc;
-    wire  [31: 0] instruction;
+    logic [31: 0] instruction;
+    wire  [31: 0] instruction_raw;
     
     logic [31: 0] address;
     logic [31: 0] write_data;
@@ -41,12 +42,14 @@ module Top(
     logic [ 7: 0] rx_holding;
     logic [ 7: 0] line_status;
 
-    parameter DMEMORY_BASE = 32'h00000000;
-    parameter DMEMORY_SIZE = 32'h10000000;
+    parameter IMEMORY_BASE = 32'h80000000;
+    parameter IMEMORY_SIZE = 32'h00000800;
+    parameter DMEMORY_BASE = 32'h90000000;
+    parameter DMEMORY_SIZE = 32'h00000800;
     parameter UART_RW_ADDRESS = 32'h10010000;
     parameter UART_STATUS_ADDRESS = 32'h10010005;
     parameter BAUD_MAX_ADDRESS = 32'h10010100;
-    
+
     logic busy;
     logic read_ready;
     logic uart_write_enable;
@@ -58,7 +61,7 @@ module Top(
             dmemory_write_enable = write_enable;
         end else begin
             dmemory_write_enable = 1'b0;
-        end    
+        end
     end
     always_ff @(posedge clk) begin
         if (rst) begin
@@ -82,6 +85,13 @@ module Top(
             UART_STATUS_ADDRESS: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
+
+        // instructionの範囲チェック
+        if (IMEMORY_BASE <= pc && pc < IMEMORY_BASE + IMEMORY_SIZE) begin
+            instruction = instruction_raw;
+        end else begin
+            instruction = 0;
+        end
     end
 
     Core core(
@@ -101,7 +111,7 @@ module Top(
         .instruction(instruction),
         .valid(valid)
     );
-  
+
     DMemory data_memory_test(
         .clk(clk),
         .rst(rst),
@@ -123,7 +133,7 @@ module Top(
         .clk(clk),
         .pc(pc),
         .rst(rst),
-        .instr(instruction),
+        .instr(instruction_raw),
         .valid(valid),
         .CEN(CEN_imem),
         .GWEN(GWEN_imem),

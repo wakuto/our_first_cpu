@@ -159,7 +159,7 @@ module Core(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            pc_f <= 0;
+            pc_f <= 32'h80000000;
         end
         else begin
             if (!stall_f && valid && !stall_read) pc_f <= pc_next;

@@ -6,12 +6,19 @@ module Top(
     output wire tx,
     input wire rx,
 
-    output wire CEN [0:3],
-    output wire GWEN [0:3],
-    output wire [7:0] WEN [0:3],
-    output wire [8:0] A [0:3],
-    output wire [7:0] D [0:3],
-    input  wire  [7:0] Q [0:3]
+    output wire CEN_dmem [0:3],
+    output wire GWEN_dmem [0:3],
+    output wire [7:0] WEN_dmem [0:3],
+    output wire [8:0] A_dmem [0:3],
+    output wire [7:0] D_dmem [0:3],
+    input  wire  [7:0] Q_dmem [0:3],
+
+    output wire CEN_imem [0:3],
+    output wire GWEN_imem [0:3],
+    output wire [7:0] WEN_imem [0:3],
+    output wire [8:0] A_imem [0:3],
+    output wire [7:0] D_imem [0:3],
+    input  wire  [7:0] Q_imem [0:3]
 );
     logic [31: 0] pc;
     wire  [31: 0] instruction;
@@ -105,19 +112,25 @@ module Top(
         .write_enable(dmemory_write_enable),
         .write_mask(write_mask),
         .read_data(dmemory_read_data),
-        .CEN(CEN),
-        .GWEN(GWEN),
-        .WEN(WEN),
-        .A(A),
-        .D(D),
-        .Q(Q)
+        .CEN(CEN_dmem),
+        .GWEN(GWEN_dmem),
+        .WEN(WEN_dmem),
+        .A(A_dmem),
+        .D(D_dmem),
+        .Q(Q_dmem)
     );
     IMemory instruction_memory(
         .clk(clk),
         .pc(pc),
         .rst(rst),
         .instr(instruction),
-        .valid(valid)
+        .valid(valid),
+        .CEN(CEN_imem),
+        .GWEN(GWEN_imem),
+        .WEN(WEN_imem),
+        .A(A_imem),
+        .D(D_imem),
+        .Q(Q_imem)
     );
 
     Uart uart(

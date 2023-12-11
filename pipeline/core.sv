@@ -30,6 +30,8 @@ module Core(
     logic   [2:0]   imm_src_d;
 
     logic           pc_alu_src_d;
+    logic   [1:0]   src_a_src_d;
+
 
     //PC
     logic [31:0] pc_next;
@@ -70,6 +72,8 @@ module Core(
     logic           alu_src_e;
     logic           pc_alu_src_e;
     logic   [31:0]  pc_alu_src_a;
+    logic   [1:0]   src_a_src_e;
+    logic   [31:0]  src_a_determined_e;
 
     logic   [2:0]  funct3_e;
 
@@ -159,7 +163,7 @@ module Core(
 
     always_ff @(posedge clk) begin
         if (rst) begin
-            pc_f <= 0;
+            pc_f <= 32'h80000000;
         end
         else begin
             if (!stall_f && valid && !stall_read) pc_f <= pc_next;
@@ -204,7 +208,8 @@ module Core(
         .alu_src(alu_src_d),
         .imm_src(imm_src_d),
 
-        .pc_alu_src(pc_alu_src_d)
+        .pc_alu_src(pc_alu_src_d),
+        .src_a_src(src_a_src_d)
     );
     always_comb begin
         case(result_src_w)
@@ -262,14 +267,13 @@ module Core(
 
     assign imm_ext_d = extend(imm_src_d, instr_d);
 
-    // assign pc_target_e = pc_e + imm_ext_e;
     assign pc_target_e = pc_alu_src_a + imm_ext_e;
     always_comb begin
         case(pc_alu_src_e)
             1'b0: pc_alu_src_a = pc_e;
             1'b1: begin
                 case(forward_a_e)
-                    2'b00 : pc_alu_src_a = rd1_e;
+                    2'b00 : pc_alu_src_a = src_a_determined_e;
                     2'b01 : pc_alu_src_a = result_w;
                     2'b10 : pc_alu_src_a = alu_result_m;
                     default : pc_alu_src_a = 32'hBAD0001;
@@ -305,6 +309,7 @@ module Core(
             alu_control_e <= 0;
             alu_src_e <= 0;
             pc_alu_src_e <= 0;
+            src_a_src_e <= 0;
 
             rs1_e <= 0;
             rs2_e <= 0;
@@ -328,6 +333,7 @@ module Core(
             alu_control_e <= alu_control_d;
             alu_src_e <= alu_src_d;
             pc_alu_src_e <= pc_alu_src_d;
+            src_a_src_e <= src_a_src_d;
 
             rs1_e <= rs1_d;
             rs2_e <= rs2_d;
@@ -340,8 +346,17 @@ module Core(
     end
 
     always_comb begin
+        case(src_a_src_e)
+            2'b00 : src_a_determined_e = 0;
+            2'b01 : src_a_determined_e = rd1_e;
+            2'b10 : src_a_determined_e = pc_e;
+            default : srca_e = 32'hBADCAFE;
+        endcase
+    end
+
+    always_comb begin
         case(forward_a_e)
-            2'b00 : srca_e = rd1_e;
+            2'b00 : srca_e = src_a_determined_e;
             2'b01 : srca_e = result_w;
             2'b10 : srca_e = alu_result_m;
             default : srca_e = 32'hBADCAFE;
@@ -374,11 +389,9 @@ module Core(
     // assign result = result_src ? read_data : alu_result;
     always_comb begin
         case(result_src_w)
-            3'b000 : result_w = alu_result_w;
-            3'b001 : result_w = read_data_w;
-            3'b010 : result_w = pc_plus_4_w;
-            3'b011 : result_w = imm_ext_w;
-            3'b100 : result_w = pc_target_w;
+            2'b00 : result_w = alu_result_w;
+            2'b01 : result_w = read_data_w;
+            2'b10 : result_w = pc_plus_4_w;
             default : result_w = 32'hdeadbeef;
         endcase
     end

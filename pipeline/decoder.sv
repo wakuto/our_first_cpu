@@ -15,7 +15,8 @@ module Decoder(
     output  logic       branch,
     
     //追加した制御信号
-    output logic  pc_alu_src //jar or jalr
+    output logic        pc_alu_src, //jar or jalr
+    output logic [1:0]  src_a_src
 );
 
 logic [1:0] alu_op;
@@ -33,6 +34,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // sw,sb,sh(S-形式)
         7'b0100011 : begin
@@ -45,6 +47,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // R-形式
         7'b0110011 : begin
@@ -57,6 +60,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // B-形式
         7'b1100011 : begin
@@ -69,6 +73,7 @@ always_comb begin
             branch     = 1'b1;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // addi,slli,slti,sltiu,xori,srli,srai,ori,andi
         7'b0010011 : begin
@@ -81,6 +86,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // jal
         7'b1101111 : begin
@@ -88,11 +94,12 @@ always_comb begin
             imm_src    = 3'b11;
             alu_src    = 0;
             mem_write  = 0;
-            result_src = 3'b10;
+            result_src = 2'b10;
             alu_op     = 2'b00;
             branch     = 1'b0;
             jump       = 1'b1;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b1;
         end
         // jalr
         7'b1100111 : begin
@@ -100,11 +107,12 @@ always_comb begin
             imm_src    = 3'b00;
             alu_src    = 1;
             mem_write  = 0;
-            result_src = 3'b10;
+            result_src = 2'b10;
             alu_op     = 2'b10;
             branch     = 1'b0;
             jump       = 1'b1;
             pc_alu_src = 1'b1;
+            src_a_src  = 2'b1;
         end
         // lui(U-type)
         7'b0110111 : begin
@@ -112,11 +120,12 @@ always_comb begin
             imm_src    = 3'b100;
             alu_src    = 1;
             mem_write  = 0;
-            result_src = 3'b11;
+            result_src = 2'b0;
             alu_op     = 2'b0;
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b0;
         end
         // auipc(U-type)
         7'b0010111 : begin
@@ -124,11 +133,12 @@ always_comb begin
             imm_src    = 3'b100;
             alu_src    = 1;
             mem_write  = 0;
-            result_src = 3'b100;
+            result_src = 2'b0;
             alu_op     = 2'b0;
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b10;
         end
         default : begin
             reg_write  = 0;
@@ -140,6 +150,7 @@ always_comb begin
             branch     = 1'b0;
             jump       = 1'b0;
             pc_alu_src = 1'b0;
+            src_a_src  = 2'b0; 
         end
     endcase
 end

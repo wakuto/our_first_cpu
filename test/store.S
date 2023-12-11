@@ -1,7 +1,7 @@
 .section .text
 .global _start
 _start:
-    addi t0,x0,0
+    lui t0, 0x90000
     addi t1,x0,-1001
 
     sb t1, 0(t0)

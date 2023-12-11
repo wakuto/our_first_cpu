@@ -19,22 +19,24 @@ module DMemory (
     input  wire  [7:0] Q [0:3]
 );
 
+logic [31:0] prev_addr;
 always_comb begin
     for(int i=0;i<4;i++) begin
         CEN[i]  = rst;
         GWEN[i] = !write_enable;
-        WEN[2'(address+i)]  = {8{!write_mask[i]}};
-        A[i] = 9'((address + i) >> 2);
-        D[i] = write_data[8*i +: 8];
+        WEN[i]  = {8{!write_mask[(-(address & 3) + i) & 3]}};
+        A[i] = 9'((address >> 2) + (i < (address & 3)));
+        D[i] = write_data[((-(address & 3) + i) & 3) << 3+:8];
     end
-    read_data = {Q[3], Q[2], Q[1], Q[0]};
+    read_data = {Q[(prev_addr[1:0]+3) & 3], Q[(prev_addr[1:0]+2) & 3], Q[(prev_addr[1:0]+1) & 3], Q[(prev_addr[1:0]) & 3]};
 end
 always_ff @(posedge clk) begin
-    if (read_enable && !write_enable && !read_valid) begin
+    if (read_enable && !write_enable && (!read_valid | prev_addr == address)) begin
         read_valid <= 1'b1;
     end else begin
         read_valid <= 1'b0;
     end
+    prev_addr <= address;
 end
 endmodule
 `default_nettype wire

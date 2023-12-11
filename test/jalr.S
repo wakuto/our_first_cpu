@@ -2,10 +2,10 @@
 .global _start
 _start:
     # jalr test code
-    addi x4, x0, 32
-    jalr x5, x4, 0
-    # jal x5,L1
-    addi x7, x0, 100
+    lui x4, 0x80000
+    jalr x5, x4, 32
+    addi x9, x0, 100
+    jal x10, .end
     nop
     nop
     nop
@@ -14,6 +14,8 @@ _start:
 
 L1:
     addi x6, x0, 10
+    add x7, x5, x0
+    jalr x8, x5, 0
     
 .end:
     beq x0, x0, .end

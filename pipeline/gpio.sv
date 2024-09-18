@@ -13,20 +13,19 @@ module GPIO (
     input  wire [31:0]  gpio_in
 );
 
-    parameter GPIO_BASE = 32'ha0000000;
-    parameter GPIO_SIZE = 32'h00000100;
+    parameter GPIO_ADDRESS = 32'ha0000000;
 
     reg [31:0] gpio_register;
 
     always_ff @(posedge clk) begin
         if (rst) begin
             gpio_register <= 32'b0;
-        end else if (write_enable && (address >= GPIO_BASE && address < GPIO_BASE + GPIO_SIZE)) begin
+        end else if (write_enable && address == GPIO_ADDRESS) begin
             gpio_register <= write_data;
         end
     end
 
-    assign read_data = (read_enable && (address >= GPIO_BASE && address < GPIO_BASE + GPIO_SIZE)) ? gpio_in : 32'h00000000;
+    assign read_data = (read_enable && address >= GPIO_ADDRESS) ? gpio_in : 32'h00000000;
 
     always_ff @(posedge clk) begin
         if (rst) begin

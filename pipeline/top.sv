@@ -18,7 +18,10 @@ module Top(
     output wire [7:0] WEN_imem [0:3],
     output wire [8:0] A_imem [0:3],
     output wire [7:0] D_imem [0:3],
-    input  wire  [7:0] Q_imem [0:3]
+    input  wire  [7:0] Q_imem [0:3],
+
+    output wire [31:0] gpio_out,
+    input  wire [31:0] gpio_in
 );
     logic [31: 0] pc;
     logic [31: 0] instruction;
@@ -46,6 +49,8 @@ module Top(
     parameter IMEMORY_SIZE = 32'h00000800;
     parameter DMEMORY_BASE = 32'h90000000;
     parameter DMEMORY_SIZE = 32'h00000800;
+    parameter GPIO_BASE    = 32'ha0000000;
+    parameter GPIO_SIZE    = 32'h00000010;
     parameter UART_RW_ADDRESS = 32'h10010000;
     parameter UART_STATUS_ADDRESS = 32'h10010005;
     parameter BAUD_MAX_ADDRESS = 32'h10010100;
@@ -54,6 +59,7 @@ module Top(
     logic read_ready;
     logic uart_write_enable;
     logic dmemory_write_enable;
+    logic [31:0] gpio_read_data;  // gpio_read_dataの宣言
 
     always_comb begin
         uart_write_enable = address == UART_RW_ADDRESS && write_enable;
@@ -83,6 +89,7 @@ module Top(
         case(address)
             UART_RW_ADDRESS: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
             UART_STATUS_ADDRESS: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
+            GPIO_BASE: read_data = gpio_read_data; // GPIO read
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
 
@@ -157,6 +164,19 @@ module Top(
         .baud_max(baud_max),
         .negate_read_ready(read_enable && address == UART_RW_ADDRESS)
     );
+
+    GPIO gpio(
+        .clk(clk),
+        .rst(rst),
+        .address(address),
+        .write_data(write_data),
+        .write_enable(write_enable),
+        .read_data(gpio_read_data),  // 修正: gpio_read_dataを接続
+        .read_enable(read_enable),
+        .gpio_out(gpio_out),
+        .gpio_in(gpio_in)
+    );
+
 
 endmodule
 `default_nettype wire

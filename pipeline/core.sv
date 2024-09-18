@@ -350,7 +350,7 @@ module Core(
             2'b00 : src_a_determined_e = 0;
             2'b01 : src_a_determined_e = rd1_e;
             2'b10 : src_a_determined_e = pc_e;
-            default : srca_e = 32'hBADCAFE;
+            default : src_a_determined_e = 32'hBADCAFE;
         endcase
     end
 

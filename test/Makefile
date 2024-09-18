@@ -1,4 +1,4 @@
-PREFIX=riscv32-unknown-elf-
+PREFIX=riscv64-unknown-elf-
 TARGET :=
 TARGET_DIR := ./isa
 PATTERN := ^rv32ui-p-[a-z]+$
@@ -9,12 +9,12 @@ BIN_FILES := $(shell find $(TARGET_DIR) -type f | sort -n | grep -E 'rv32ui-p-.+
 all: test.bin
 
 test.bin: ${TARGET}.S link.ld
-	$(PREFIX)as ./${TARGET}.S -c -o ${TARGET}.o
-	$(PREFIX)ld ./${TARGET}.o -Tlink.ld -o ./${TARGET}.elf
+	$(PREFIX)as -march=rv32i -mabi=ilp32 ./${TARGET}.S -c -o ${TARGET}.o
+	$(PREFIX)ld -b elf32-littleriscv ./${TARGET}.o -Tlink.ld -o ./${TARGET}.elf
 	$(PREFIX)objcopy -O binary ./${TARGET}.elf ./test.bin
 
 test.hex: test.bin
-	od -t x1 -A n -w1 -v ./test.bin > ./test.hex
+	hexdump -v -e '1/1 "%02x\n"' ./test.bin > ./test.hex
 
 bin: link.ld
 	@for name in $(FILES); do\
@@ -23,7 +23,7 @@ bin: link.ld
 
 hex: bin
 	@for name in $(FILES); do\
-		od -t x1 -A n -w1 -v $$name.bin > $$name.hex;\
+		od -t x1 -A n -v $$name.bin > $$name.hex;\
 	done
 
 dump:

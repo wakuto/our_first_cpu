@@ -23,7 +23,7 @@ bin: link.ld
 
 hex: bin
 	@for name in $(FILES); do\
-		od -t x1 -A n -v $$name.bin > $$name.hex;\
+		hexdump -v -e '1/1 "%02x\n"' $$name.bin > $$name.hex
 	done
 
 dump:

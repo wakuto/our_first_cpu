@@ -6,7 +6,7 @@ module GPIO (
     input  wire [31:0]  address,
     input  wire [31:0]  write_data,
     input  wire         write_enable,
-    output wire [31:0]  read_data,
+    output reg [31:0]  read_data,
     input  wire         read_enable,
 
     output reg  [31:0]  gpio_out,
@@ -24,15 +24,13 @@ module GPIO (
             gpio_register <= write_data;
         end
     end
-
-    assign read_data = (read_enable && address >= GPIO_ADDRESS) ? gpio_in : 32'h00000000;
-
     always_ff @(posedge clk) begin
-        if (rst) begin
-            gpio_out <= 32'b0;
-        end else begin
-            gpio_out <= gpio_register;
+        if(rst) begin
+            read_data <= 32'b0;
+        end else if (read_enable && address == GPIO_ADDRESS) begin
+            read_data <= gpio_out;
         end
     end
+    assign gpio_out = gpio_register;
 endmodule
 `default_nettype wire

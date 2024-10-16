@@ -1,5 +1,5 @@
-MODULES = alu.sv top.sv core.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv uart.sv gf180mcu_fd_ip_sram__sram512x8m8wm1.sv
-
+MODULES = alu.sv top.sv core.sv decoder.sv dmemory.sv imemory.sv regfile.sv cpu_test.sv hazard.sv uart.sv gpio.sv gf180mcu_fd_ip_sram__sram512x8m8wm1.sv
+TARGET :=
 TARGET_DIR := ../test/isa
 HEX_FILES := $(shell find $(TARGET_DIR) -type f | sort -n | grep -E 'rv32ui-p-.+\.hex')
 
@@ -11,8 +11,8 @@ cpu: $(MODULES)
 program.hex:
 	make -C ../program program.hex
 
-test.hex:
-	make -C ../test test.hex
+test.hex: ../test/$(TARGET).S
+	make -C ../test test.hex TARGET=$(TARGET)
 
 make-hex:
 	make -C ../test hex
@@ -37,6 +37,7 @@ verilator:
 
 clean:
 	rm -rf cpu cpu.vcd
+	rm -rf ../test/test.bin
 
 .PHONY: all run make-hex riscv-test test verilator clean
 

@@ -90,6 +90,7 @@ module Top(
             UART_RW_ADDRESS: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
             UART_STATUS_ADDRESS: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
             GPIO_ADDRESS_IN: read_data = gpio_read_data; // GPIO read
+            GPIO_ADDRESS_OUT: read_data = gpio_out; // GPIO write
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
 
@@ -172,7 +173,6 @@ module Top(
         .write_data(write_data),
         .write_enable(write_enable),
         .read_data(gpio_read_data),
-        .read_enable(read_enable),
         .gpio_out(gpio_out),
         .gpio_in(gpio_in)
     );

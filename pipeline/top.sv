@@ -59,7 +59,9 @@ module Top(
     logic read_ready;
     logic uart_write_enable;
     logic dmemory_write_enable;
-    logic [31:0] gpio_read_data;  // gpio_read_dataの宣言
+    logic [31:0] gpio_read_data;
+    logic [31: 0] gpio_write_data;
+
 
     always_comb begin
         uart_write_enable = address == UART_RW_ADDRESS && write_enable;
@@ -99,6 +101,15 @@ module Top(
             instruction = instruction_raw;
         end else begin
             instruction = 0;
+        end
+    end
+
+    // write_dataのマルチプレクサ
+    always_ff @(posedge clk) begin
+        if(rst) begin
+            gpio_write_data = 32'h0;
+        end else if(address == GPIO_ADDRESS_OUT && write_enable) begin
+            gpio_write_data = write_data;
         end
     end
 
@@ -169,9 +180,7 @@ module Top(
     GPIO gpio(
         .clk(clk),
         .rst(rst),
-        .address(address),
-        .write_data(write_data),
-        .write_enable(write_enable),
+        .write_data(gpio_write_data),
         .read_data(gpio_read_data),
         .gpio_out(gpio_out),
         .gpio_in(gpio_in)

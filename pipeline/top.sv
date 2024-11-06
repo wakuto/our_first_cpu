@@ -61,6 +61,7 @@ module Top(
     logic dmemory_write_enable;
     logic [31:0] gpio_read_data;
     logic [31: 0] gpio_write_data;
+    logic gpio_write_enable;
 
 
     always_comb begin
@@ -105,11 +106,13 @@ module Top(
     end
 
     // write_dataのマルチプレクサ
-    always_ff @(posedge clk) begin
-        if(rst) begin
-            gpio_write_data = 32'h0;
-        end else if(address == GPIO_ADDRESS_OUT && write_enable) begin
+    always_comb begin
+        if(address == GPIO_ADDRESS_OUT) begin
             gpio_write_data = write_data;
+            gpio_write_enable = write_enable;
+        end else begin
+            gpio_write_data = 32'h0;
+            gpio_write_enable = 1'b0;
         end
     end
 
@@ -183,9 +186,9 @@ module Top(
         .write_data(gpio_write_data),
         .read_data(gpio_read_data),
         .gpio_out(gpio_out),
-        .gpio_in(gpio_in)
+        .gpio_in(gpio_in),
+        .write_enable(write_enable)
     );
-
 
 endmodule
 `default_nettype wire

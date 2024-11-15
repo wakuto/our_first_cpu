@@ -18,7 +18,10 @@ module Top(
     output wire [7:0] WEN_imem [0:3],
     output wire [8:0] A_imem [0:3],
     output wire [7:0] D_imem [0:3],
-    input  wire  [7:0] Q_imem [0:3]
+    input  wire  [7:0] Q_imem [0:3],
+
+    output wire [31:0] gpio_out,
+    input  wire [31:0] gpio_in
 );
     logic [31: 0] pc;
     logic [31: 0] instruction;
@@ -46,6 +49,8 @@ module Top(
     parameter IMEMORY_SIZE = 32'h00000800;
     parameter DMEMORY_BASE = 32'h90000000;
     parameter DMEMORY_SIZE = 32'h00000800;
+    parameter GPIO_ADDRESS_IN   = 32'ha0000000;
+    parameter GPIO_ADDRESS_OUT  = 32'ha0000100;
     parameter UART_RW_ADDRESS = 32'h10010000;
     parameter UART_STATUS_ADDRESS = 32'h10010005;
     parameter BAUD_MAX_ADDRESS = 32'h10010100;
@@ -54,6 +59,10 @@ module Top(
     logic read_ready;
     logic uart_write_enable;
     logic dmemory_write_enable;
+    logic [31:0] gpio_read_data;
+    logic [31: 0] gpio_write_data;
+    logic gpio_write_enable;
+
 
     always_comb begin
         uart_write_enable = address == UART_RW_ADDRESS && write_enable;
@@ -83,6 +92,8 @@ module Top(
         case(address)
             UART_RW_ADDRESS: read_data = {24'b0,rx_holding}; //受信時ならば、rx_holdingを返す
             UART_STATUS_ADDRESS: read_data = {24'b0,line_status}; //uart[5]には、busyとread_readyが入っている
+            GPIO_ADDRESS_IN: read_data = gpio_read_data; // GPIO read
+            GPIO_ADDRESS_OUT: read_data = gpio_out; // GPIO write
             default: read_data = dmemory_read_data; //それ以外の場合は、dmemoryから読み出したデータを返す
         endcase
 
@@ -91,6 +102,17 @@ module Top(
             instruction = instruction_raw;
         end else begin
             instruction = 0;
+        end
+    end
+
+    // write_dataのマルチプレクサ
+    always_comb begin
+        if(address == GPIO_ADDRESS_OUT) begin
+            gpio_write_data = write_data;
+            gpio_write_enable = write_enable;
+        end else begin
+            gpio_write_data = 32'h0;
+            gpio_write_enable = 1'b0;
         end
     end
 
@@ -156,6 +178,16 @@ module Top(
         .outValid(outValid),
         .baud_max(baud_max),
         .negate_read_ready(read_enable && address == UART_RW_ADDRESS)
+    );
+
+    GPIO gpio(
+        .clk(clk),
+        .rst(rst),
+        .write_data(gpio_write_data),
+        .read_data(gpio_read_data),
+        .gpio_out(gpio_out),
+        .gpio_in(gpio_in),
+        .write_enable(write_enable)
     );
 
 endmodule

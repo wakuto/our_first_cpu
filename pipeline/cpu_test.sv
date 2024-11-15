@@ -49,7 +49,8 @@ module cpu_test();
         .WEN_imem(WEN_imem_read),
         .A_imem(A_imem_read),
         .D_imem(D_imem_read),
-        .Q_imem(Q_imem)
+        .Q_imem(Q_imem),
+        .gpio_in(32'h87654321)
         );
 
     logic [7:0] mem [0:4095];

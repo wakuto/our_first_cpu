@@ -12,3 +12,6 @@ cpu
 
 # log
 *.log
+
+# isaの変更をすべて無視
+isa/
